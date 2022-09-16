@@ -7,8 +7,26 @@ For a given hypotetical class Payload that's how one encode and decode it
 # Encoding example
 
 ```scala
+import cats.*, cats.syntax.all.*
+import io.circe.*
 
+import br.com.fjwt.crypto.base64.encode.Base64Encoder
+import br.com.fjwt.crypto.hs512.HS512Encoder
+import br.com.fjwt.encode.JWTEncoder
 
+type F = [T] =>> T
+lazy val base64Encoder: Base64Encoder[F] = Base64Encoder.dsl
+lazy val hs512Encoder: HS512Encoder[F] = HS512Encoder.dsl
+lazy val encoder: JWTEncoder[F] = JWTEncoder.dsl(base64Encoder, hs512Encoder)
+
+final case class Payload(sub: String, name: String, admin: Boolean, iat: Long)
+
+given Encoder[Payload] = io.circe.generic.semiauto.deriveCodec
+
+val payload = Payload("1234567890", "John Doe", true, 1516239022)
+val key = "a-super-secret-key"
+
+val encoded = encoder.encode(key)(payload)
 
 ```
 
@@ -29,7 +47,7 @@ lazy val decoder: JWTDecoder[F] = JWTDecoder.dsl(base64Encoder, hs512Encoder)
 
 final case class Payload(sub: String, name: String, admin: Boolean, iat: Long)
 
-given Encoder[Payload] = io.circe.generic.semiauto.deriveCodec
+given Decoder[Payload] = io.circe.generic.semiauto.deriveCodec
 
 val input = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0=.d92964cfa2a75550ae735c371a831e4eeb6c40b1734c28b565ab8fbc8a95b038d9e462c0b78a2c1b8fc00117bd0d7eabe92163b738be84e3181aeaede4f7bae6"
 val key = "a-super-secret-key"
@@ -45,4 +63,4 @@ val decoded = decoder.decode(key)(input)
 **Expired Token** `The token might have an iat field indicating when it will expire and at the time you are decoding it might be already expired`
 **Payload Decoding failure** `During the parsing of the payload some error may occur like bad payload format`
 
-### For this reason the JWTDecoder has a special type F[*] =>> MonadError[F, Throwable]
+### For these reasons the JWTDecoder has a special type F[*] =>> MonadError[F, Throwable]
