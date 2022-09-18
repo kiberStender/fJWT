@@ -3,11 +3,16 @@ package decoder
 
 import br.com.fjwt.crypto.base64.decode.Base64Decoder
 import br.com.fjwt.crypto.hs512.HS512Encoder
+import br.com.fjwt.claim.Claim
+
 import io.circe.*, io.circe.parser.*
 import cats.*, cats.syntax.all.*
+import java.time.{ZoneId, Instant, LocalDateTime}
 
 trait JWTDecoder[F[*]]:
-  def decode[A](privateKey: String)(token: String)(using D: Decoder[A]): F[A]
+  def decode[P: Codec](privateKey: String)(token: String)(using
+      zoneId: ZoneId
+  ): F[P]
 
 object JWTDecoder:
   def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable]](
@@ -32,18 +37,32 @@ object JWTDecoder:
           .raiseError[F, String]
     }
 
-    private def decodePayload[A](payload: String)(using D: Decoder[A]): F[A] =
+    private def decodeClaim[P: Codec](payload: String): F[Claim[P]] =
       parser
-        .decode[A](payload)
+        .decode[Claim[P]](payload)
         .fold(
-          _.raiseError[F, A],
+          _.raiseError[F, Claim[P]],
           _.pure[F]
         )
 
-    def decode[A](
+    private def isExpired[P: Codec](claim: Claim[P])(using
+        zoneId: ZoneId
+    ): F[P] =
+      lazy val now = LocalDateTime.now()
+      claim.exp
+        .map(Instant.ofEpochMilli(_).atZone(zoneId).toLocalDateTime())
+        .map(_ isAfter now)
+        .map({
+          case true  => claim.payload.pure[F]
+          case false => new Throwable("Token is expired").raiseError[F, P]
+        })
+        .getOrElse(claim.payload.pure[F])
+
+    def decode[P: Codec](
         privateKey: String
-    )(token: String)(using D: Decoder[A]): F[A] =
+    )(token: String)(using zoneId: ZoneId): F[P] =
       for
         payloadStr <- isValid(privateKey, token split "\\.")
-        decodedPayload <- decodePayload(payloadStr)
-      yield decodedPayload
+        decodedPayload <- decodeClaim(payloadStr)
+        payload <- isExpired(decodedPayload)
+      yield payload
