@@ -45,6 +45,8 @@ val encoded = encoder.encode(key)(sub = sub, exp = exp, iat = iat)(payload)
 import cats.*, cats.syntax.all.*
 import io.circe.*
 
+import java.time.ZoneId
+
 import br.com.fjwt.crypto.base64.decode.Base64Decoder
 import br.com.fjwt.crypto.hs512.HS512Encoder
 import br.com.fjwt.decode.JWTDecoder
