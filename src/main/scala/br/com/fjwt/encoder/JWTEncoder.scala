@@ -7,10 +7,25 @@ import br.com.fjwt.crypto.hs512.HS512Encoder
 import cats.*
 import cats.syntax.all.*
 
-import io.circe.*
+import io.circe.*, io.circe.syntax.*
+import br.com.fjwt.claim.Claim
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 trait JWTEncoder[F[*]]:
-  def encode[P](privateKey: String)(payload: P)(using EA: Encoder[P]): F[String]
+  def encode[P: Codec](privateKey: String)(
+      iss: Option[String] = None,
+      sub: Option[String] = None,
+      aud: Option[String] = None,
+      exp: Option[LocalDateTime] = None,
+      nbf: Option[LocalDateTime] = None,
+      iat: Option[LocalDateTime] = LocalDateTime.now().some,
+      jti: Option[String] = None
+  )(payload: P)(using zoneId: ZoneId): F[String]
+
+  def encode[P: Codec](privateKey: String)(payload: P)(using
+      zoneId: ZoneId
+  ): F[String]
 
 object JWTEncoder:
   def dsl[F[*]: Monad](
@@ -18,15 +33,38 @@ object JWTEncoder:
       hs512Encoder: HS512Encoder[F]
   ): JWTEncoder[F] =
     new JWTEncoder[F]:
-      def encode[P](privateKey: String)(payload: P)(using
-          EA: Encoder[P]
-      ): F[String] =
+      def toEpochMilli(ldt: LocalDateTime)(using zoneId: ZoneId): Long =
+        ldt.atZone(zoneId).toInstant().toEpochMilli()
+      def encode[P: Codec](privateKey: String)(
+          iss: Option[String] = None,
+          sub: Option[String] = None,
+          aud: Option[String] = None,
+          exp: Option[LocalDateTime] = None,
+          nbf: Option[LocalDateTime] = None,
+          iat: Option[LocalDateTime] = LocalDateTime.now().some,
+          jti: Option[String] = None
+      )(payload: P)(using zoneId: ZoneId): F[String] =
         lazy val header = Alg(JWTAlgorythm.HS512, "JWT")
         for
           encodedHeader <- base64Encoder.encode(
             JWTHeader.encoder(header).noSpaces
           )
-          encodedPayload <- base64Encoder.encode(EA(payload).noSpaces)
+          claim = Claim[P](
+            iss,
+            sub,
+            aud,
+            exp.map(toEpochMilli),
+            nbf.map(toEpochMilli),
+            iat.map(toEpochMilli),
+            jti,
+            payload
+          ).asJson
+          encodedPayload <- base64Encoder.encode(claim.noSpaces)
           body = s"$encodedHeader.$encodedPayload"
           jwt <- hs512Encoder.encode(privateKey)(body)
         yield s"$encodedHeader.$encodedPayload.$jwt"
+
+      def encode[P: Codec](privateKey: String)(payload: P)(using
+          zoneId: ZoneId
+      ): F[String] =
+        encode(privateKey)()(payload)
