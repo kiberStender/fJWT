@@ -1,7 +1,6 @@
 package br.com.fjwt
 package crypto
 package base64
-package decode
 
 import cats.*
 import cats.syntax.all.*

@@ -1,7 +1,6 @@
 package br.com.fjwt
 package crypto
 package base64
-package encode
 
 import cats.*, cats.syntax.all.*
 import java.util.Base64
