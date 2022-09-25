@@ -2,7 +2,7 @@ package br.com.fjwt
 package decoder
 
 import br.com.fjwt.crypto.base64.decode.Base64Decoder
-import br.com.fjwt.crypto.hs512.HS512Encoder
+import br.com.fjwt.crypto.hs.HmacEncoder
 import br.com.fjwt.claim.Claim
 
 import io.circe.*, io.circe.parser.*
@@ -17,7 +17,7 @@ trait JWTDecoder[F[*]]:
 object JWTDecoder:
   def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable]](
       base64Decoder: Base64Decoder[F],
-      hs512Encoder: HS512Encoder[F]
+      hsEncoder: HmacEncoder[F]
   ): JWTDecoder[F] = new JWTDecoder[F]:
 
     private def isSignatureValid(
@@ -29,7 +29,7 @@ object JWTDecoder:
     private def isValid: (String, Array[String]) => F[String] = {
       case (privateKey, Array(header, payload, signature)) =>
         for
-          encoded <- hs512Encoder.encode(privateKey)(s"$header.$payload")
+          encoded <- hsEncoder.encode(privateKey)(s"$header.$payload")
           result <- isSignatureValid(encoded)(signature)(payload)
         yield result
       case _ =>

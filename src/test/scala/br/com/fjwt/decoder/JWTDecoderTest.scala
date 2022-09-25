@@ -6,7 +6,7 @@ import cats.*, cats.syntax.all.*
 
 import org.scalatest.flatspec.AnyFlatSpecLike
 import br.com.fjwt.crypto.base64.decode.Base64Decoder
-import br.com.fjwt.crypto.hs512.HS512Encoder
+import br.com.fjwt.crypto.hs.HmacEncoder
 import java.time.ZoneId
 
 private final case class Payload(name: String, admin: Boolean)
@@ -16,7 +16,7 @@ private given Codec[Payload] = io.circe.generic.semiauto.deriveCodec
 class JWTDecoderTest extends AnyFlatSpecLike:
   private type F = [T] =>> Either[Throwable, T]
   private lazy val base64Encoder: Base64Decoder[F] = Base64Decoder.dsl
-  private lazy val hs512Encoder: HS512Encoder[F] = HS512Encoder.dsl
+  private lazy val hs512Encoder: HmacEncoder[F] = HmacEncoder.hs512Encoder
   private lazy val decoder: JWTDecoder[F] = JWTDecoder.dsl(base64Encoder, hs512Encoder)
   private given zoneId: ZoneId = ZoneId.of("UTC")
 

@@ -2,7 +2,7 @@ package br.com.fjwt
 package encoder
 
 import br.com.fjwt.crypto.base64.encode.Base64Encoder
-import br.com.fjwt.crypto.hs512.HS512Encoder
+import br.com.fjwt.crypto.hs.HmacEncoder
 
 import cats.*
 import cats.syntax.all.*
@@ -30,7 +30,7 @@ trait JWTEncoder[F[*]]:
 object JWTEncoder:
   def dsl[F[*]: Monad](
       base64Encoder: Base64Encoder[F],
-      hs512Encoder: HS512Encoder[F]
+      hsEncoder: HmacEncoder[F]
   ): JWTEncoder[F] =
     new JWTEncoder[F]:
       def toEpochMilli(ldt: LocalDateTime)(using zoneId: ZoneId): Long =
@@ -61,7 +61,7 @@ object JWTEncoder:
           ).asJson
           encodedPayload <- base64Encoder.encode(claim.noSpaces)
           body = s"$encodedHeader.$encodedPayload"
-          jwt <- hs512Encoder.encode(privateKey)(body)
+          jwt <- hsEncoder.encode(privateKey)(body)
         yield s"$encodedHeader.$encodedPayload.$jwt"
 
       def encode[P: Codec](privateKey: String)(payload: P)(using
