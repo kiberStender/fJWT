@@ -1,6 +1,6 @@
 package br.com.fjwt
 package crypto
-package hs512
+package hs
 
 import cats.*, cats.syntax.all.*
 
@@ -8,7 +8,7 @@ import org.scalatest.flatspec.AnyFlatSpecLike
 
 class HS512EncoderTest extends AnyFlatSpecLike:
   private type F = [T] =>> T
-  private lazy val hs512Encoder: HS512Encoder[F] = HS512Encoder.dsl
+  private lazy val hs512Encoder: HmacEncoder[F] = HmacEncoder.hs512Encoder
 
   "HS512Encoder" should "encrypt a JWT Token" in {
     // GIVEN
