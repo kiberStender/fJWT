@@ -21,11 +21,9 @@ trait JWTEncoder[F[*]]:
       nbf: Option[LocalDateTime] = None,
       iat: Option[LocalDateTime] = LocalDateTime.now().some,
       jti: Option[String] = None
-  )(payload: P)(using zoneId: ZoneId): F[String]
+  )(payload: P)(using ZoneId): F[String]
 
-  def encode[P: Codec](privateKey: String)(payload: P)(using
-      zoneId: ZoneId
-  ): F[String]
+  def encode[P: Codec](privateKey: String)(payload: P)(using ZoneId): F[String]
 
 object JWTEncoder:
   def dsl[F[*]: Monad](
@@ -43,8 +41,8 @@ object JWTEncoder:
           nbf: Option[LocalDateTime] = None,
           iat: Option[LocalDateTime] = LocalDateTime.now().some,
           jti: Option[String] = None
-      )(payload: P)(using zoneId: ZoneId): F[String] =
-        lazy val header = Alg(JWTAlgorythm.HS512, "JWT")
+      )(payload: P)(using ZoneId): F[String] =
+        lazy val header = Alg(hsEncoder.alg, "JWT")
         for
           encodedHeader <- base64Encoder.encode(
             JWTHeader.encoder(header).noSpaces
@@ -65,6 +63,6 @@ object JWTEncoder:
         yield s"$encodedHeader.$encodedPayload.$jwt"
 
       def encode[P: Codec](privateKey: String)(payload: P)(using
-          zoneId: ZoneId
+          ZoneId
       ): F[String] =
         encode(privateKey)()(payload)
