@@ -10,9 +10,7 @@ import cats.*, cats.syntax.all.*
 import java.time.{ZoneId, Instant, LocalDateTime}
 
 trait JWTDecoder[F[*]]:
-  def decode[P: Codec](privateKey: String)(token: String)(using
-      zoneId: ZoneId
-  ): F[P]
+  def decode[P: Codec](privateKey: String)(token: String)(using ZoneId): F[P]
 
 object JWTDecoder:
   def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable]](
@@ -60,7 +58,7 @@ object JWTDecoder:
 
     def decode[P: Codec](
         privateKey: String
-    )(token: String)(using zoneId: ZoneId): F[P] =
+    )(token: String)(using ZoneId): F[P] =
       for
         payloadStr <- isValid(privateKey, token split "\\.")
         decodedPayload <- decodeClaim(payloadStr)

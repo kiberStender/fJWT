@@ -18,7 +18,7 @@ class JWTDecoderTest extends AnyFlatSpecLike:
   private lazy val base64Encoder: Base64Decoder[F] = Base64Decoder.dsl
   private lazy val hs512Encoder: HmacEncoder[F] = HmacEncoder.hs512Encoder
   private lazy val decoder: JWTDecoder[F] = JWTDecoder.dsl(base64Encoder, hs512Encoder)
-  private given zoneId: ZoneId = ZoneId.of("UTC")
+  private given ZoneId = ZoneId.of("UTC")
 
   "JWTDecoder" should "decode a JWT token into a Payload object" in {
     // GIVEN
