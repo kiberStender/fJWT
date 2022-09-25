@@ -1,7 +1,7 @@
 package br.com.fjwt
 package decoder
 
-import br.com.fjwt.crypto.base64.decode.Base64Decoder
+import br.com.fjwt.crypto.base64.Base64Decoder
 import br.com.fjwt.crypto.hs.HmacEncoder
 import br.com.fjwt.claim.Claim
 

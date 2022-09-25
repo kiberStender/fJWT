@@ -1,7 +1,7 @@
 package br.com.fjwt
 package encoder
 
-import br.com.fjwt.crypto.base64.encode.Base64Encoder
+import br.com.fjwt.crypto.base64.Base64Encoder
 import br.com.fjwt.crypto.hs.HmacEncoder
 
 import cats.*

@@ -5,7 +5,7 @@ import io.circe.*, io.circe.syntax.*
 import cats.*, cats.syntax.all.*
 
 import org.scalatest.flatspec.AnyFlatSpecLike
-import br.com.fjwt.crypto.base64.decode.Base64Decoder
+import br.com.fjwt.crypto.base64.Base64Decoder
 import br.com.fjwt.crypto.hs.HmacEncoder
 import java.time.ZoneId
 
