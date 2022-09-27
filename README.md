@@ -96,7 +96,7 @@ When decoding a given JWT(JSON Web Token) you can fall into 4 possible errors:
 
 In order to instantiate a JWTDecoder you will need:
 
-- **Base64Decoder[F]** You can either use the already provided Base64Decoder(which is a simple wrapper around java.util.Base64 class) using dsl method to instantiate my implementation where F is just a cats.ApplicativeError or you can easily create your own implementation as Base64Decoder is a trait and only has one method called `def encode(str: String): F[String]`
+- **Base64Decoder[F]** You can either use the already provided Base64Decoder(which is a simple wrapper around java.util.Base64 class) using dsl method to instantiate my implementation where F is just a cats.ApplicativeError or you can easily create your own implementation as Base64Decoder is a trait and only has one method called `def decode(str: String): F[String]`
 
 - **HmacEncoder[F]** HMAC implementation (which is an wrapper to org.apache.commons.codec.digest.HmacUtils) where F is a cats.Applicative or you can easily create your own by implementing the trait HmacEncoder which has two methods: `def encode(privateKey: String)(str: String): F[String]` and `def alg: HmacEncoderAlgorithms` which is a method that tells which algorithm will actually be used and to populate JWTHeader. It is used to recalculate the token signature using it's header and body to check if the newly calculated signature matches against the token signature
 
