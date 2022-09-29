@@ -100,7 +100,7 @@ In order to instantiate a JWTDecoder you will need:
 
 - **HmacEncoder[F]** HMAC implementation (which is an wrapper to org.apache.commons.codec.digest.HmacUtils) where F is a cats.Applicative or you can easily create your own by implementing the trait HmacEncoder which has two methods: `def encode(privateKey: String)(str: String): F[String]` and `def alg: HmacEncoderAlgorithms` which is a method that tells which algorithm will actually be used and to populate JWTHeader. It is used to recalculate the token signature using it's header and body to check if the newly calculated signature matches against the token signature
 
-With the dependencies satisfied you can easily call the method `def dsl[F[*]: Monad](base64Encoder: Base64Encoder[F], hsEncoder: HmacEncoder[F]): JWTEncoder[F]` to create an instance of JWTDecoder and then you can decode a given token by using the method decode:
+With the dependencies satisfied you can easily call the method `def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable]](base64Decoder: Base64Decoder[F], hsEncoder: HmacEncoder[F]): JWTDecoder[F]` to create an instance of JWTDecoder and then you can decode a given token by using the method decode:
 
 - `def decode[P: Codec](privateKey: String)(token: String)(using ZoneId): F[P]`:
 
