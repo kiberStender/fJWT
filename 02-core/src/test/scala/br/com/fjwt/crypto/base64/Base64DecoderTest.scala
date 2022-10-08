@@ -2,12 +2,18 @@ package br.com.fjwt
 package crypto
 package base64
 
-import cats.*, cats.syntax.all.*
-
+import br.com.fjwt.error.JWTError
+import br.com.fjwt.error.JWTError.EmptyToken
+import br.com.fjwt.error.JWTError.NullToken
+import br.com.fjwt.error.JWTError.NotMappedError
+import br.com.fjwt.validation.CodecValidation
+import cats.*
+import cats.syntax.all.*
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 class Base64DecoderTest extends AnyFlatSpecLike: 
-  private type F = [T] =>> Either[Throwable, T]
+  private type F = [T] =>> Either[JWTError, T]
+  private given CodecValidation[F] = CodecValidation.dsl
   private lazy val base64Decoder: Base64Decoder[F] = Base64Decoder.dsl
 
   "Base64Decoder" should "decrypt the header" in {
@@ -32,10 +38,21 @@ class Base64DecoderTest extends AnyFlatSpecLike:
     assert(expected === actual)
   }
 
-  it must "fail to decrypt the non Base64 string" in {
+  it must "not decrypt when token is empty" in {
     // GIVEN
-    val input = "d92964cfa2a75550ae735c371a831e4eeb6c40b1734c28b565ab8fbc8a95b038d9e462c0b78a2c1b8fc00117bd0d7eabe92163b738be84e3181aeaede4f7bae6"
-    val expected = new IllegalArgumentException().raiseError[F, String]
+    val input = ""
+    val expected: F[String] = EmptyToken.raiseError[F, String]
+    // WHEN
+    val actual = base64Decoder.decode(input)
+
+    // THEN
+    assert(expected === actual)
+  }
+
+  it must "not decrypt when token is null" in {
+    // GIVEN
+    val input: String = null
+    val expected: F[String] = NullToken.raiseError[F, String]
     // WHEN
     val actual = base64Decoder.decode(input)
 
@@ -45,8 +62,8 @@ class Base64DecoderTest extends AnyFlatSpecLike:
 
   it must "fail to decrypt the broken Base64 string" in {
     // GIVEN
-    val input = "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyM0"
-    val expected = new IllegalArgumentException().raiseError[F, String]
+    val input = "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyM"
+    val expected = NotMappedError("Last unit does not have enough valid bits").raiseError[F, String]
     // WHEN
     val actual = base64Decoder.decode(input)
 
