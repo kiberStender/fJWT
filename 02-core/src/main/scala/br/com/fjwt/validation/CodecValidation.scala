@@ -16,8 +16,8 @@ trait CodecValidation[F[*]]:
   def validateToken(token: String): F[String]
 
 object CodecValidation:
-  def dsl[F[*] : [F[*]] =>> ApplicativeError[F, JWTError]]: CodecValidation[F] =
-    new CodecValidation[F] :
+  def dsl[F[*]: [F[*]] =>> ApplicativeError[F, JWTError]]: CodecValidation[F] =
+    new CodecValidation[F]:
       def validatePrivateKey(privateKey: String): F[String] =
         if privateKey == null then NullPrivateKey.raiseError[F, String]
         else if privateKey.isEmpty then EmptyPrivateKey.raiseError[F, String]
