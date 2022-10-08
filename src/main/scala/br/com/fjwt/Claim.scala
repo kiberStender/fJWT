@@ -1,8 +1,8 @@
 package br.com.fjwt
-package claim
 
-import io.circe.*, io.circe.parser, io.circe.syntax.*
+import io.circe.*
 import io.circe.Decoder.Result
+import io.circe.syntax.*
 
 final case class Claim[P: Codec](
     iss: Option[String],
