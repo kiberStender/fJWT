@@ -4,13 +4,24 @@ ThisBuild / version := "0.0.1-SNAPSHOT"
 
 lazy val Cctt = "compile->compile;test->test"
 
-  lazy val crypto= (project in file("00-crypto"))
+lazy val domain = (project in file("01-domain"))
+  .settings(Common.settings: _*)
+  .settings(libraryDependencies ++= Common.`domain-dependencies`)
+
+lazy val core =
+  project
+    .in(file("02-core"))
+    .dependsOn(domain % Cctt)
     .settings(Common.settings: _*)
-    .settings(libraryDependencies ++= Common.`crypto-dependencies`)
+    .settings(libraryDependencies ++= Common.`core-dependencies`)
 
   lazy val root = (project in file("."))
-    .dependsOn(crypto % Cctt)
+    .dependsOn(core % Cctt)
     .settings(name := "fJWT")
+    .aggregate(
+      domain,
+      core
+    )
     .settings(Common.settings: _*)
     .settings(libraryDependencies ++= Common.`jwt-dependencies`)
-    .enablePlugins(JavaAppPackaging)    
+    .enablePlugins(JavaAppPackaging)

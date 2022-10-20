@@ -28,6 +28,17 @@ object Common {
     org.scalatest.scalatest
   )
 
+  lazy val `domain-dependencies`: Seq[ModuleID] = Seq(
+    org.typelevel.`cats-core`
+  )
+
+  lazy val `core-dependencies`: Seq[ModuleID] = Seq(
+    org.typelevel.`cats-core`,
+    `commons-codec`.`commons-codec`,
+    // Test
+    org.scalatest.scalatest
+  )
+
   lazy val `jwt-dependencies`: Seq[ModuleID] = Seq(
     io.circe.`circe-parser`,
     io.circe.`circe-generic`,
