@@ -3,18 +3,15 @@ package br.com.fjwt
 import br.com.fjwt.crypto.base64.Base64Encoder
 import br.com.fjwt.crypto.hs.HmacEncoder
 import br.com.fjwt.error.JWTError
-import br.com.fjwt.validation.CodecValidation
-
+import br.com.fjwt.error.JWTError.{EmptyPrivateKey, NullPrivateKey}
+import br.com.fjwt.validation.StringValidation
 import cats.MonadError
-import cats.syntax.all.catsSyntaxApplicativeErrorId
-import cats.syntax.all.catsSyntaxOptionId
-import cats.syntax.all.toFunctorOps
-import cats.syntax.all.toFlatMapOps
-
+import cats.syntax.all.{catsSyntaxApplicativeErrorId, catsSyntaxOptionId, toFlatMapOps, toFunctorOps}
 import io.circe.*
 import io.circe.syntax.*
 
 import java.time.{LocalDateTime, ZoneId}
+import scala.annotation.tailrec
 
 trait JWTEncoder[F[*]]:
   def encode[P: Codec](privateKey: String)(
@@ -33,7 +30,7 @@ object JWTEncoder:
   def dsl[F[*]: [F[*]] =>> MonadError[F, JWTError]](
       base64Encoder: Base64Encoder[F],
       hsEncoder: HmacEncoder[F]
-  ): JWTEncoder[F] =
+  )(using stringValidation: StringValidation[F]): JWTEncoder[F] =
     new JWTEncoder[F]:
       def toEpochMilli(ldt: LocalDateTime)(using zoneId: ZoneId): Long =
         ldt.atZone(zoneId).toInstant.toEpochMilli
@@ -49,6 +46,7 @@ object JWTEncoder:
       )(payload: P)(using ZoneId): F[String] =
         lazy val header = Alg(hsEncoder.alg, "JWT")
         for
+          key <- stringValidation.validate(privateKey)(NullPrivateKey)(EmptyPrivateKey)
           encodedHeader <- base64Encoder.encode(JWTHeader.encoder(header).noSpaces)
           claim = Claim[P](
             iss,
@@ -62,7 +60,7 @@ object JWTEncoder:
           ).asJson
           encodedPayload <- base64Encoder.encode(claim.noSpaces)
           body = s"$encodedHeader.$encodedPayload"
-          jwt <- hsEncoder.encode(privateKey)(body)
+          jwt <- hsEncoder.encode(key)(body)
         yield s"$encodedHeader.$encodedPayload.$jwt"
 
       def encode[P: Codec](privateKey: String)(payload: P)(using ZoneId): F[String] =

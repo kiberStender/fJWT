@@ -4,21 +4,18 @@ import br.com.fjwt.crypto.base64.Base64Encoder
 import br.com.fjwt.crypto.hs.HmacEncoder
 import br.com.fjwt.error.JWTError
 import br.com.fjwt.error.JWTError.{EmptyPrivateKey, NullPrivateKey}
-import br.com.fjwt.validation.CodecValidation
+import br.com.fjwt.validation.StringValidation
 
-import cats.syntax.all.catsSyntaxOptionId
-import cats.syntax.all.catsSyntaxApplicativeId
-import cats.syntax.all.catsSyntaxApplicativeErrorId
+import cats.syntax.all.{catsSyntaxApplicativeErrorId, catsSyntaxApplicativeId, catsSyntaxOptionId}
 
 import io.circe.*
-
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 import java.time.{Instant, ZoneId}
 
 class JWTEncoderTest extends AnyFlatSpecLike:
   private type F = [T] =>> Either[JWTError, T]
-  private given codecValidation: CodecValidation[F] = CodecValidation.dsl[F]
+  private given StringValidation[F] = StringValidation.dsl
   private lazy val base64Encoder: Base64Encoder[F] = Base64Encoder.dsl
   private lazy val hs512Encoder: HmacEncoder[F] = HmacEncoder.hs512Encoder
   private lazy val encoder: JWTEncoder[F] = JWTEncoder.dsl(base64Encoder, hs512Encoder)
