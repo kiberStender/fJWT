@@ -1,24 +1,24 @@
-# fJWT
+# F[JWT]
 
 Simple scala 3 library to generate and validate JWT`s (JSON Web Tokens) written in Tagless Final style
 
-For a given hypotetical class Payload that's how one encode and decode it
+For a given hypothetical class Payload that's how one encode and decode it
 
 # Encoding
 
-When encoding an object, even though the library takes care of parsing it to json, in the end it is still a String encriptation, so no error is expected, that's why it expects a simple Monad[F] where F is of the type `F = [T] =>> T`, which is an ID[T] type, meaning any class that implements Monad will sufice. In the above example I'm using cats ID typeclass implicity, but I could literally use an Option, Either, Future, Java Promise, ZIO IO, Monix task, etc....
+When encoding an object, even though the library takes care of parsing it to json, you might forget to provide the private key as it usually comes from some config file, therefore the Encoding type is MonadError[F]. This type guarantees you won't lose any errors that might come, and you will be able to treat it(See example below)
 
-In order to instantiate a JWTEncoder to start generating your JWT tokens you will need the following:
+In order to instantiate a JWTEncoder to start generating your JWT(JSON Web Token) tokens you will need the following:
 
-- **Base64Encoder[F]** You can either use the already provided Base64Encoder(which is a simple wrapper around java.util.Base64 class) using dsl method to instantiate my implementation where F is just a cats.Applicative or you can easily create your own implementation as Base64Encoder is a trait and only has one method called `encode(str: String): F[String]`
+- **Base64Encoder[F]** You can either use the already provided Base64Encoder(which is a simple wrapper around ```java.util.Base64``` class) using dsl method to instantiate my implementation where F is just a cats.Applicative or you can easily create your own implementation as Base64Encoder is a trait and only has one method called `encode(str: String): F[String]`
 
-- **HmacEncoder[F]** HMAC implementation (which is an wrapper to org.apache.commons.codec.digest.HmacUtils) where F is a cats.Applicative or you can easily create your own by implementing the trait HmacEncoder which has two methods: `def encode(privateKey: String)(str: String): F[String]` and `def alg: HmacEncoderAlgorithms` which is a method that tells which algorithm will actually be used and to populate JWTHeader
+- **HmacEncoder[F]** HMAC implementation (which is n wrapper to org.apache.commons.codec.digest.HmacUtils) where F is a cats.Applicative or you can easily create your own by implementing the trait HmacEncoder which has two methods: `def encode(privateKey: String)(str: String): F[String]` and `def alg: HmacEncoderAlgorithms` which is a method that tells which algorithm will actually be used and to populate JWTHeader
 
-After providing these two dependencies you can easily create an instance of JWTEncoder by calling the `dsl[F[*]: Monad](base64Encoder: Base64Encoder[F], hmacEncoder: HmacEncoder[F]): JWTEncoder[F]` method and by providing any instance of Monad[F] as cited above. After you have your instance of JWTEncoder you can create your JWT Token by using one of the two encode methods:
+After providing these two dependencies you can easily create an instance of JWTEncoder by calling the `dsl[F[*]: Monad](base64Encoder: Base64Encoder[F], hmacEncoder: HmacEncoder[F]): JWTEncoder[F]` method and by providing any instance of MonadError[F] as cited above. After you have your instance of JWTEncoder you can create your JWT Token by using one of the two encode methods:
 
 - `def encode[P: Codec](privateKey: String)(iss: Option[String],sub: Option[String],aud: Option[String],exp: Option[LocalDateTime],nbf: Option[LocalDateTime],iat: Option[LocalDateTime],jti: Option[String])(payload: P)(using ZoneId): F[String]`:
 
-  - **P** It is the type of the class you want to encode in the payload of your JWT. It needs a io.Circe.Codec instance for the JWTEncoder to be able to convert it to a JSON String
+  - **P** It is the type of the class you want to encode in the payload of your JWT. It needs a ```io.Circe.Codec``` instance for the JWTEncoder to be able to convert it to a JSON String
 
   - **privateKey: String** This is the key that will be used to encrypt both your header and payload to generate the signature of your JWT
 
@@ -38,11 +38,11 @@ After providing these two dependencies you can easily create an instance of JWTE
 
   - **payload: P** It is the payload itself. An instance of P that you have to provide
 
-  - **ZoneId** An implicit instance of java.time.ZoneId object to help converting the LocaldateTime objects to Epoch milli
+  - **ZoneId** An implicit instance of java.time.ZoneId object to help converting the LocalDateTime objects to Epoch milli
 
 - `def encode[P: Codec](privateKey: String)(payload: P)(using ZoneId): F[String]`:
 
-  - **P** It is the type of the class you want to encode in the payload of your JWT. It needs a io.Circe.Codec instance for the JWTEncoder to be able to convert it to a JSON String
+  - **P** It is the type of the class you want to encode in the payload of your JWT. It needs a ```io.Circe.Codec``` instance for the JWTEncoder to be able to convert it to a JSON String
 
   - **privateKey: String** This is the key that will be used to encrypt both your header and payload to generate the signature of your JWT
 
@@ -63,7 +63,7 @@ import br.com.fjwt.crypto.base64.Base64Encoder
 import br.com.fjwt.crypto.hs.HMacEncoder
 import br.com.fjwt.encode.JWTEncoder
 
-type F = [T] =>> T
+type F = [T] =>> Either[Throwable, T]
 lazy val base64Encoder: Base64Encoder[F] = Base64Encoder.dsl
 lazy val hs512Encoder: HmacEncoder[F] = HmacEncoder.hs512Encoder
 lazy val encoder: JWTEncoder[F] = JWTEncoder.dsl(base64Encoder, hs512Encoder)
@@ -91,7 +91,7 @@ When decoding a given JWT(JSON Web Token) you can fall into 4 possible errors:
 
 - **Token does not contain exact 3 parts** `The token must have 3 parts header.payload.signature. If there is more or less than 3 it is considered invalid`
 - **Invalid Signature** `It might be a fraud or a mistake, so the signature might not match`
-- **Expired Token** `The token might have an exp field indicating when it will expire and at the time you are decoding it, it might be already expired`
+- **Expired Token** `The token might have an exp field indicating when it will expire and by the time you are decoding it, it might be already expired`
 - **Payload Decoding failure** `During the parsing of the payload some error may occur like bad payload format`
 
 In order to instantiate a JWTDecoder you will need:
