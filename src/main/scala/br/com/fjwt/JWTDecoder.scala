@@ -26,7 +26,8 @@ object JWTDecoder:
   def dsl[F[*]: [F[*]] =>> MonadError[F, JWTError]](
       base64Decoder: Base64Decoder[F],
       hsEncoder: HmacEncoder[F]
-  )(using stringValidation: StringValidation[F]): JWTDecoder[F] = new JWTDecoder[F]:
+  ): JWTDecoder[F] = new JWTDecoder[F]:
+    lazy val stringValidation: StringValidation[F] = StringValidation.dsl
 
     private def isSignatureValid(encoded: String)(signature: String)(payload: String): F[String] =
       if encoded == signature then base64Decoder decode payload
