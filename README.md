@@ -59,9 +59,9 @@ import io.circe.*
 import java.time.ZoneId
 import java.time.Instant
 
-import br.com.fjwt.crypto.base64.Base64Encoder
-import br.com.fjwt.crypto.hs.HMacEncoder
-import br.com.fjwt.encode.JWTEncoder
+import io.github.kiberStender.fjwt.crypto.base64.Base64Encoder
+import io.github.kiberStender.fjwt.crypto.hs.HmacEncoder
+import io.github.kiberStender.fjwt.JWTEncoder
 
 type F = [T] =>> Either[Throwable, T]
 lazy val base64Encoder: Base64Encoder[F] = Base64Encoder.dsl
@@ -120,9 +120,9 @@ import io.circe.*
 
 import java.time.ZoneId
 
-import br.com.fjwt.crypto.base64.decode.Base64Decoder
-import br.com.fjwt.crypto.hs512.HS512Encoder
-import br.com.fjwt.decode.JWTDecoder
+import io.github.kiberStender.fjwt.crypto.base64.decode.Base64Decoder
+import io.github.kiberStender.fjwt.crypto.hs.HmacEncoder
+import io.github.kiberStender.fjwt.JWTDecoder
 
 type F = [T] =>> Either[Throwable, T]
 lazy val base64Encoder: Base64Decoder[F] = Base64Decoder.dsl
