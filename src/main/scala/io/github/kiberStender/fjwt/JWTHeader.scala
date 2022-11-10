@@ -1,7 +1,8 @@
 package io.github.kiberStender
 package fjwt
 
-import io.circe.*, io.circe.generic.semiauto.*
+import io.circe.*
+import io.circe.generic.semiauto.*
 import io.github.kiberStender.fjwt.crypto.hs.HmacEncoderAlgorithms
 
 sealed trait JWTHeader

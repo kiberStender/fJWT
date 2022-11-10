@@ -5,7 +5,6 @@ package base64
 
 import io.github.kiberStender.fjwt.error.JWTError.EmptyToken
 import io.github.kiberStender.fjwt.error.JWTError.NullToken
-
 import cats.syntax.all.catsSyntaxApplicativeId
 import cats.syntax.all.catsSyntaxApplicativeErrorId
 import io.github.kiberStender.fjwt.error.JWTError

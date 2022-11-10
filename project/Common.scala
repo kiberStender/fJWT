@@ -19,18 +19,9 @@ object Common {
     Test / parallelExecution                 := true
   )
 
-  lazy val `domain-dependencies`: Seq[ModuleID] = Seq(
-    org.typelevel.`cats-core`
-  )
-
-  lazy val `core-dependencies`: Seq[ModuleID] = Seq(
+  lazy val dependencies: Seq[ModuleID] = Seq(
     org.typelevel.`cats-core`,
     `commons-codec`.`commons-codec`,
-    // Test
-    org.scalatest.scalatest
-  )
-
-  lazy val `delivery-dependencies`: Seq[ModuleID] = Seq(
     io.circe.`circe-parser`,
     io.circe.`circe-generic`,
     // Test

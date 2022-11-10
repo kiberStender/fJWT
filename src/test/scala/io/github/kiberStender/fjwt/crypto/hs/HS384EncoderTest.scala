@@ -1,11 +1,9 @@
 package io.github.kiberStender.fjwt.crypto.hs
 
 import io.github.kiberStender.fjwt.error.JWTError.{EmptyPrivateKey, EmptyToken, NullPrivateKey, NullToken}
-
 import cats.syntax.all.catsSyntaxApplicativeId
 import cats.syntax.all.catsSyntaxApplicativeErrorId
 import io.github.kiberStender.fjwt.error.JWTError
-
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 class HS384EncoderTest extends AnyFlatSpecLike:

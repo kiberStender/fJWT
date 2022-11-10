@@ -3,10 +3,8 @@ package fjwt
 package validation
 
 import io.github.kiberStender.fjwt.error.JWTError.{EmptyToken, NullToken}
-
-import cats.syntax.all.{catsSyntaxApplicativeId, catsSyntaxApplicativeErrorId}
+import cats.syntax.all.{catsSyntaxApplicativeErrorId, catsSyntaxApplicativeId}
 import io.github.kiberStender.fjwt.error.JWTError
-
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 class StringValidationTest extends AnyFlatSpecLike:

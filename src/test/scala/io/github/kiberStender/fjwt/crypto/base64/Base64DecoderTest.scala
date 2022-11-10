@@ -6,7 +6,6 @@ package base64
 import io.github.kiberStender.fjwt.error.JWTError.EmptyToken
 import io.github.kiberStender.fjwt.error.JWTError.NullToken
 import io.github.kiberStender.fjwt.error.JWTError.NotMappedError
-
 import cats.*
 import cats.syntax.all.*
 import io.github.kiberStender.fjwt.error.JWTError
