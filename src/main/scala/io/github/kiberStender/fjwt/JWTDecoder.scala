@@ -22,7 +22,7 @@ trait JWTDecoder[F[*]]:
   def decode[P: Codec](privateKey: String)(accessToken: String)(using ZoneId): F[P]
 
 object JWTDecoder:
-  def dsl[F[*]: [F[*]] =>> MonadError[F, JWTError]](
+  def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable]](
       base64Decoder: Base64Decoder[F],
       hsEncoder: HmacEncoder[F]
   ): JWTDecoder[F] = new JWTDecoder[F]:

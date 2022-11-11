@@ -11,7 +11,7 @@ import io.github.kiberStender.fjwt.error.JWTError
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 class Base64EncoderTest extends AnyFlatSpecLike: 
-  private type F = [T] =>> Either[JWTError, T]
+  private type F = [T] =>> Either[Throwable, T]
   private lazy val base64Encoder: Base64Encoder[F] = Base64Encoder.dsl
 
   "Base64Encoder" should "encrypt the header" in {

@@ -17,7 +17,6 @@ import io.github.kiberStender.fjwt.error.JWTError
 import io.github.kiberStender.fjwt.validation.StringValidation
 
 import java.time.{LocalDateTime, ZoneId}
-import scala.annotation.tailrec
 
 trait JWTEncoder[F[*]]:
   def encode[P: Codec](privateKey: String)(
@@ -33,7 +32,7 @@ trait JWTEncoder[F[*]]:
   def encode[P: Codec](privateKey: String)(payload: P)(using ZoneId): F[String]
 
 object JWTEncoder:
-  def dsl[F[*]: [F[*]] =>> MonadError[F, JWTError]](
+  def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable]](
       base64Encoder: Base64Encoder[F],
       hsEncoder: HmacEncoder[F]
   ): JWTEncoder[F] = new JWTEncoder[F]:
@@ -54,7 +53,7 @@ object JWTEncoder:
       lazy val header = Alg(hsEncoder.alg, "JWT")
       for
         key <- stringValidation.validate(privateKey)(NullPrivateKey)(EmptyPrivateKey)
-        encodedHeader <- base64Encoder.encode(JWTHeader.encoder(header).noSpaces)
+        encodedHeader <- base64Encoder.encode(Alg.encoder(header).noSpaces)
         claim = Claim[P](
           iss,
           sub,

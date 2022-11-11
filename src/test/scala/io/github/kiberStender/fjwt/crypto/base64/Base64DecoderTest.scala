@@ -12,7 +12,7 @@ import io.github.kiberStender.fjwt.error.JWTError
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 class Base64DecoderTest extends AnyFlatSpecLike: 
-  private type F = [T] =>> Either[JWTError, T]
+  private type F = [T] =>> Either[Throwable, T]
   private lazy val base64Decoder: Base64Decoder[F] = Base64Decoder.dsl
 
   "Base64Decoder" should "decrypt the header" in {

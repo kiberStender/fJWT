@@ -2,7 +2,7 @@ package io.github.kiberStender
 package fjwt
 package error
 
-enum JWTError(val message: String):
+enum JWTError(val message: String) extends Throwable(message):
   case NotMappedError(errorMessage: String) extends JWTError(errorMessage)
   case ExpiredToken extends JWTError("Token is expired")
   case InvalidSignature extends JWTError("JWT Signature does not match")

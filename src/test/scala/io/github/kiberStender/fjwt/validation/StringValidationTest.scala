@@ -8,7 +8,7 @@ import io.github.kiberStender.fjwt.error.JWTError
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 class StringValidationTest extends AnyFlatSpecLike:
-  private type F = [T] =>> Either[JWTError, T]
+  private type F = [T] =>> Either[Throwable, T]
   private lazy val stringValidation: StringValidation[F] = StringValidation.dsl
 
   "JwtTokenValidation" should "return a valid accessToken when it is not empty nor null" in {

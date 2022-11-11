@@ -5,7 +5,7 @@ import io.circe.*
 import io.circe.Decoder.Result
 import io.circe.syntax.*
 
-final case class Claim[P: Codec](
+private final case class Claim[P: Codec](
     iss: Option[String],
     sub: Option[String],
     aud: Option[String],
@@ -16,7 +16,7 @@ final case class Claim[P: Codec](
     payload: P
 )
 
-object Claim:
+private object Claim:
   given encoder[P: Codec](using EP: Encoder[P]): Encoder[Claim[P]] =
     new Encoder[Claim[P]]() {
       def apply(cp: Claim[P]): Json = Json.obj(

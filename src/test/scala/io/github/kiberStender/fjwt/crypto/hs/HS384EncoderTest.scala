@@ -7,7 +7,7 @@ import io.github.kiberStender.fjwt.error.JWTError
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 class HS384EncoderTest extends AnyFlatSpecLike:
-  private type F = [T] =>> Either[JWTError, T]
+  private type F = [T] =>> Either[Throwable, T]
   private lazy val encoder: HmacEncoder[F] = HmacEncoder.hs384Encoder
 
   "HS384Encoder" should "encrypt a JWT Token" in {

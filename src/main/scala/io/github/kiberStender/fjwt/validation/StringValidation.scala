@@ -8,12 +8,12 @@ import cats.syntax.all.catsSyntaxApplicativeId
 import io.github.kiberStender.fjwt.error.JWTError
 
 trait StringValidation[F[*]]:
-  def validate[E <: JWTError](token: String)(nullCase: => E)(emptyCase: => E): F[String]
+  def validate[E <: Throwable](token: String)(nullCase: => E)(emptyCase: => E): F[String]
 
 object StringValidation:
-  def dsl[F[*]: [F[*]] =>> ApplicativeError[F, JWTError]]: StringValidation[F] =
+  def dsl[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]: StringValidation[F] =
     new StringValidation[F]:
-      override def validate[E <: JWTError](
+      override def validate[E <: Throwable](
           token: String
       )(nullCase: => E)(emptyCase: => E): F[String] =
         if token == null then nullCase.raiseError[F, String]

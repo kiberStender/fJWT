@@ -13,7 +13,7 @@ import org.scalatest.flatspec.AnyFlatSpecLike
 import java.time.ZoneId
 
 class JWTDecoderTest extends AnyFlatSpecLike:
-  private type F = [T] =>> Either[JWTError, T]
+  private type F = [T] =>> Either[Throwable, T]
   private lazy val base64Encoder: Base64Decoder[F] = Base64Decoder.dsl
   private lazy val hs512Encoder: HmacEncoder[F] = HmacEncoder.hs512Encoder
   private lazy val decoder: JWTDecoder[F] = JWTDecoder.dsl(base64Encoder, hs512Encoder)
