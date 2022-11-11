@@ -9,6 +9,10 @@ ThisBuild / publishTo := Some(if (isSnapshot.value) Opts.resolver.sonatypeOssSna
 
 ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
 
+ThisBuild / versionScheme := Some("early-semver")
+
+credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
+
 // release with sbt-release plugin
 import ReleaseTransformations._
 ThisBuild / releaseCrossBuild := true
