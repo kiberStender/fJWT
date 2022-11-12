@@ -1,15 +1,21 @@
+import xerial.sbt.Sonatype._
+
 ThisBuild / organization := "io.github.kiberStender"
 ThisBuild / description := "Simple Scala 3 JWT encoder/decoder written using Tagless final encoding"
-ThisBuild / homepage := Some(url("https://github.com/kiberStender/fJWT"))
-ThisBuild / scmInfo := Some(ScmInfo(url("https://github.com/kiberStender/fJWT"), "git@github.com:kiberStender/fJWT.git"))
-ThisBuild / developers := List(Developer("kiberStender", "Kleber Stender", "kleber.stender@gmail.com", url("https://github.com/kiberStender/")))
-ThisBuild / licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
+homepage := Some(url("https://github.com/kiberStender/fJWT"))
+scmInfo := Some(ScmInfo(url("https://github.com/kiberStender/fJWT"), "git@github.com:kiberStender/fJWT.git"))
+developers := List(Developer("kiberStender", "Kleber Stender", "kleberstenderdev@gmail.com", url("https://github.com/kiberStender/")))
+licenses += ("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 
-ThisBuild / publishTo := Some(if (isSnapshot.value) Opts.resolver.sonatypeOssSnapshots.head else Opts.resolver.sonatypeOssReleases.head)
+publishMavenStyle := true
+sonatypeProfileName := "io.github.kiberStender"
+sonatypeProjectHosting := Some(GitHubHosting(user = "kiberStender", repository = "fjwt", email = "kleberstenderdev@gmail.com"))
 
-ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
+publishTo := sonatypePublishToBundle.value
 
-ThisBuild / versionScheme := Some("early-semver")
+sonatypeCredentialHost := "s01.oss.sonatype.org"
+
+versionScheme := Some("early-semver")
 
 credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
 
