@@ -6,15 +6,15 @@ For a given hypothetical class Payload that's how one encode and decode it
 
 # Encoding
 
-When encoding an object, even though the library takes care of parsing it to json, you might forget to provide the private key as it usually comes from some config file, therefore the Encoding type is MonadError[F]. This type guarantees you won't lose any errors that might come, and you will be able to treat it(See example below)
+When encoding an object, even though the library takes care of parsing it to json, you might forget to provide the private key as it usually comes from some config file, therefore the Encoding type is MonadError[F]. This type guarantees you won't lose any errors that might come, and you will be able to treat them(See example below)
 
 In order to instantiate a JWTEncoder to start generating your JWT(JSON Web Token) tokens you will need the following:
 
 - **Base64Encoder[F]** You can either use the already provided Base64Encoder(which is a simple wrapper around ```java.util.Base64``` class) using dsl method to instantiate my implementation where F is just a cats.Applicative or you can easily create your own implementation as Base64Encoder is a trait and only has one method called `encode(str: String): F[String]`
 
-- **HmacEncoder[F]** HMAC implementation (which is n wrapper to org.apache.commons.codec.digest.HmacUtils) where F is a cats.Applicative or you can easily create your own by implementing the trait HmacEncoder which has two methods: `def encode(privateKey: String)(str: String): F[String]` and `def alg: HmacEncoderAlgorithms` which is a method that tells which algorithm will actually be used and to populate JWTHeader
+- **HmacEncoder[F]** HMAC implementation (which is n wrapper to org.apache.commons.codec.digest.HmacUtils) where F is a cats.Applicative or you can easily create your own by implementing the trait HmacEncoder which has two methods: `def encode(privateKey: String)(str: String): F[String]` and `def alg: HmacEncoderAlgorithms` which is a method that tells which algorithm will actually be used to populate JWTHeader
 
-After providing these two dependencies you can easily create an instance of JWTEncoder by calling the `dsl[F[*]: Monad](base64Encoder: Base64Encoder[F], hmacEncoder: HmacEncoder[F]): JWTEncoder[F]` method and by providing any instance of MonadError[F] as cited above. After you have your instance of JWTEncoder you can create your JWT Token by using one of the two encode methods:
+After providing these two dependencies you can easily create an instance of JWTEncoder by calling the `def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable]](base64Encoder: Base64Encoder[F], hsEncoder: HmacEncoder[F]): JWTEncoder[F]` method and by providing any instance of MonadError[F] as cited above. After you have your instance of JWTEncoder, you can create your JWT Token by using one of the two encode methods:
 
 - `def encode[P: Codec](privateKey: String)(iss: Option[String],sub: Option[String],aud: Option[String],exp: Option[LocalDateTime],nbf: Option[LocalDateTime],iat: Option[LocalDateTime],jti: Option[String])(payload: P)(using ZoneId): F[String]`:
 
@@ -98,9 +98,7 @@ In order to instantiate a JWTDecoder you will need:
 
 - **Base64Decoder[F]** You can either use the already provided Base64Decoder(which is a simple wrapper around java.util.Base64 class) using dsl method to instantiate my implementation where F is just a cats.ApplicativeError or you can easily create your own implementation as Base64Decoder is a trait and only has one method called `def decode(str: String): F[String]`
 
-- **HmacEncoder[F]** HMAC implementation (which is an wrapper to org.apache.commons.codec.digest.HmacUtils) where F is a cats.Applicative or you can easily create your own by implementing the trait HmacEncoder which has two methods: `def encode(privateKey: String)(str: String): F[String]` and `def alg: HmacEncoderAlgorithms` which is a method that tells which algorithm will actually be used and to populate JWTHeader. It is used to recalculate the token signature using it's header and body to check if the newly calculated signature matches against the token signature
-
-With the dependencies satisfied you can easily call the method `def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable]](base64Decoder: Base64Decoder[F], hsEncoder: HmacEncoder[F]): JWTDecoder[F]` to create an instance of JWTDecoder and then you can decode a given token by using the method decode:
+Based on the header of the token, JWTDecoder might be able to choose the signature algorithm as long as the values are the same supported by `org.apache.commons.codec.digest.HmacAlgorithms`. With the dependencies satisfied you can easily call the method `def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable]](base64Decoder: Base64Decoder[F]): JWTDecoder[F]` to create an instance of JWTDecoder, then you can decode a given token by using the method decode:
 
 - `def decode[P: Codec](privateKey: String)(token: String)(using ZoneId): F[P]`:
 
@@ -126,17 +124,24 @@ import io.github.kiberStender.fjwt.JWTDecoder
 
 type F = [T] =>> Either[Throwable, T]
 lazy val base64Encoder: Base64Decoder[F] = Base64Decoder.dsl
-lazy val hs512Encoder: HmacEncoder[F] = HmacEncoder.hs512Encoder
-lazy val decoder: JWTDecoder[F] = JWTDecoder.dsl(base64Encoder, hs512Encoder)
+lazy val decoder: JWTDecoder[F] = JWTDecoder.dsl(base64Encoder)
 given zoneId: ZoneId = ZoneId.of("UTC")
 
 final case class Payload(name: String, admin: Boolean)
 
 given Decoder[Payload] = io.circe.generic.semiauto.deriveCodec
 
-val input = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0=.d92964cfa2a75550ae735c371a831e4eeb6c40b1734c28b565ab8fbc8a95b038d9e462c0b78a2c1b8fc00117bd0d7eabe92163b738be84e3181aeaede4f7bae6"
-val key = "a-super-secret-key"
+val key = "kleber-super-secret-key"
+val input = "eyJhbGciOiJIbWFjU0hBNTEyIiwidHlwIjoiSldUIn0=.eyJpc3MiOm51bGwsInN1YiI6IjEyMzQ1Njc4OTAiLCJhdWQiOm51bGwsImV4cCI6bnVsbCwibmJmIjpudWxsLCJpYXQiOjE1MTYyMzkwMjIsImp0aSI6bnVsbCwicGF5bG9hZCI6eyJuYW1lIjoiSm9obiBEb2UiLCJhZG1pbiI6dHJ1ZX19.29743acd123183547fe568550db9416a02ed3a7aeeb9c4a74ec73baf02bb688b58d58f6508f7f0ab956a22aaf619602359038abae336abf0e0ceb7b0a0268b64"
 
 val decoded: F[Payload] = decoder.decode(key)(input)
 
 ```
+
+# Using the library
+
+In order to use this library just add it to your build dependency list 
+```scala
+libraryDependencies += "io.github.kiberStender" %% "fjwt" % "1.0.0"
+```
+#### PS: The library is still not published on maven repository
