@@ -3,53 +3,56 @@ package fjwt
 package crypto
 package hs
 
-import cats.MonadError
-import cats.syntax.all.{catsSyntaxApplicativeId, toFunctorOps, toFlatMapOps}
+import cats.syntax.all.{catsSyntaxApplicativeId, toFlatMapOps, toFunctorOps}
+import cats.Applicative
 
 import io.github.kiberStender.fjwt.error.JWTError
-
 import org.apache.commons.codec.digest.HmacUtils
-
-import javax.crypto.spec.SecretKeySpec
-import javax.crypto.Mac
-import java.util.Formatter
-import java.nio.charset.StandardCharsets
 
 trait HmacEncoder[F[*]]:
   def alg: HmacEncoderAlgorithms
   def encode(privateKey: String)(payload: String): F[String]
 
 object HmacEncoder:
-  def hs1Encoder[F[*]: [F[*]] =>> MonadError[F, Throwable]]: HmacEncoder[F] =
+  def hs1Encoder[F[*]: Applicative]: HmacEncoder[F] =
     new HmacEncoder:
-      val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HS1
+      val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HmacSHA1
       def encode(privateKey: String)(str: String): F[String] = hmacEncoder(alg)(privateKey)(str)
 
-  def hs224Encoder[F[*]: [F[*]] =>> MonadError[F, Throwable]]: HmacEncoder[F] =
+  def hs224Encoder[F[*]: Applicative]: HmacEncoder[F] =
     new HmacEncoder:
-      val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HS224
+      val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HmacSHA224
       def encode(privateKey: String)(str: String): F[String] = hmacEncoder(alg)(privateKey)(str)
 
-  def hs256Encoder[F[*]: [F[*]] =>> MonadError[F, Throwable]]: HmacEncoder[F] =
+  def hs256Encoder[F[*]: Applicative]: HmacEncoder[F] =
     new HmacEncoder:
-      val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HS256
+      val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HmacSHA256
       def encode(privateKey: String)(str: String): F[String] = hmacEncoder(alg)(privateKey)(str)
 
-  def hs384Encoder[F[*]: [F[*]] =>> MonadError[F, Throwable]]: HmacEncoder[F] =
+  def hs384Encoder[F[*]: Applicative]: HmacEncoder[F] =
     new HmacEncoder:
-      val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HS384
+      val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HmacSHA384
       def encode(privateKey: String)(str: String): F[String] = hmacEncoder(alg)(privateKey)(str)
 
-  def hs512Encoder[F[*]: [F[*]] =>> MonadError[F, Throwable]]: HmacEncoder[F] =
+  def hs512Encoder[F[*]: Applicative]: HmacEncoder[F] =
     new HmacEncoder:
-      val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HS512
+      val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HmacSHA512
       def encode(privateKey: String)(str: String): F[String] = hmacEncoder(alg)(privateKey)(str)
 
-  def hMD5Encoder[F[*]: [F[*]] =>> MonadError[F, Throwable]]: HmacEncoder[F] =
+  def hMD5Encoder[F[*]: Applicative]: HmacEncoder[F] =
     new HmacEncoder:
-      val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HMD5
+      val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HmacMD5
       def encode(privateKey: String)(str: String): F[String] = hmacEncoder(alg)(privateKey)(str)
 
-  private def hmacEncoder[F[*]: [F[*]] =>> MonadError[F, Throwable]](
+  def hsEncoder[F[*]: Applicative](
+      algorithms: HmacEncoderAlgorithms
+  ): HmacEncoder[F] =
+    new HmacEncoder[F]:
+      val alg: HmacEncoderAlgorithms = algorithms
+      def encode(privateKey: String)(payload: String): F[String] =
+        hmacEncoder(alg)(privateKey)(payload)
+
+  private def hmacEncoder[F[*]: Applicative](
       alg: HmacEncoderAlgorithms
-  )(privateKey: String)(str: String) = new HmacUtils(alg.alg, privateKey).hmacHex(str).pure[F]
+  )(privateKey: String)(str: String): F[String] =
+    new HmacUtils(alg.alg, privateKey).hmacHex(str).pure[F]
