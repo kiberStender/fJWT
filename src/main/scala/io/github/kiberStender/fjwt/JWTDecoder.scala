@@ -2,7 +2,13 @@ package io.github.kiberStender
 package fjwt
 
 import cats.MonadError
-import cats.syntax.all.{catsSyntaxApplicativeErrorId, catsSyntaxApplicativeId, catsSyntaxEq, toFlatMapOps, toFunctorOps}
+import cats.syntax.all.{
+  catsSyntaxApplicativeErrorId,
+  catsSyntaxApplicativeId,
+  catsSyntaxEq,
+  toFlatMapOps,
+  toFunctorOps
+}
 
 import io.circe.{Codec, parser}
 
