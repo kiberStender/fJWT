@@ -9,8 +9,8 @@ import cats.syntax.all.{
   toFlatMapOps,
   toFunctorOps
 }
-import io.circe.*
-import io.circe.syntax.*
+import io.circe.Codec
+import io.circe.syntax.EncoderOps
 import io.github.kiberStender.fjwt.crypto.base64.Base64Encoder
 import io.github.kiberStender.fjwt.crypto.hs.HmacEncoder
 import io.github.kiberStender.fjwt.error.JWTError

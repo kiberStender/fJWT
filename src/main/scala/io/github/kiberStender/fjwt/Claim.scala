@@ -1,9 +1,9 @@
 package io.github.kiberStender
 package fjwt
 
-import io.circe.*
+import io.circe.{Codec, Decoder, Encoder, Json, HCursor}
 import io.circe.Decoder.Result
-import io.circe.syntax.*
+import io.circe.syntax.EncoderOps
 
 private final case class Claim[P: Codec](
     iss: Option[String],
