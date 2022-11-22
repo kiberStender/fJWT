@@ -1,9 +1,12 @@
-package io.github.kiberStender.fjwt.crypto.base64
+package io.github.kiberStender 
+package fjwt
+package crypto
+package base64
 
 import io.github.kiberStender.fjwt.error.JWTError.NotMappedError
 
-import cats.*
-import cats.syntax.all.*
+import cats.ApplicativeError
+import cats.syntax.all.{catsSyntaxApplicativeErrorId, catsSyntaxApplicativeId}
 
 import java.util.Base64
 

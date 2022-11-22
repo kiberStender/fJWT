@@ -3,8 +3,7 @@ package fjwt
 package validation
 
 import cats.ApplicativeError
-import cats.syntax.all.catsSyntaxApplicativeErrorId
-import cats.syntax.all.catsSyntaxApplicativeId
+import cats.syntax.all.{catsSyntaxApplicativeErrorId, catsSyntaxApplicativeId}
 import io.github.kiberStender.fjwt.error.JWTError
 
 trait StringValidation[F[*]]:

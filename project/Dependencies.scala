@@ -17,7 +17,6 @@ object Dependencies {
     }
     case object typelevel {
       val `cats-core`   = "org.typelevel" %% "cats-core" % "2.8.0"
-      val `cats-effect` = "org.typelevel" %% "cats-effect" % "3.3.14"
     }
   }
 }
