@@ -11,7 +11,7 @@ ThisBuild / publishMavenStyle := true
 ThisBuild / sonatypeProfileName := "io.github.kiberStender"
 ThisBuild / sonatypeProjectHosting := Some(GitHubHosting(user = "kiberStender", repository = "fjwt", email = "kleberstenderdev@gmail.com"))
 
-// ThisBuild / publishTo := sonatypePublishToBundle.value
+ThisBuild / publishTo := sonatypePublishToBundle.value
 
 ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
 
