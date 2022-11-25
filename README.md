@@ -144,4 +144,3 @@ In order to use this library just add it to your build dependency list
 ```scala
 libraryDependencies += "io.github.kiberStender" %% "fjwt" % "1.0.0"
 ```
-#### PS: The library is still not published on maven repository
