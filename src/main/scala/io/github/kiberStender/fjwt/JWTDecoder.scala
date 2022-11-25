@@ -20,10 +20,31 @@ import io.github.kiberStender.fjwt.validation.StringValidation
 
 import java.time.{Instant, LocalDateTime, ZoneId}
 
+/**
+ * A trait that describes the {@link JWTDecoder} typeclass
+ * @tparam F A given container that wraps the return type
+ */
 trait JWTDecoder[F[*]]:
+  /**
+   * The method to decode a given payload object described by the type P
+   * @param privateKey The private key previously used to encode the payload
+   * @param accessToken The JWT token that will be decoded
+   * @param ZoneId The {@link ZoneID} used in claim to make expired date more accurate
+   * @tparam P The type of the payload
+   * @return The payload object wrapped in F or an Error wrapped in F describing the problem
+   */
   def decode[P: Codec](privateKey: String)(accessToken: String)(using ZoneId): F[P]
 
+/**
+ * Instance factory for {@link JWTDecoder}
+ */
 object JWTDecoder:
+  /**
+   * A method to instantiate an {@link JWTDecoder} that figures out the hmac algorithm by decoding the token header
+   * @param base64Decoder An instance of {@link Base64Decoder}
+   * @tparam F An instance of {@link MonadError[F, Throwable]}
+   * @return An instance of {@link JWTDecoder}
+   */
   def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable]](
       base64Decoder: Base64Decoder[F]
   ): JWTDecoder[F] = new JWTDecoder[F]:

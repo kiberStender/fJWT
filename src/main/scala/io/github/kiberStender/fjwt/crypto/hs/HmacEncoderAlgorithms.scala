@@ -5,6 +5,9 @@ package hs
 
 import io.circe.{Decoder, DecodingFailure, HCursor}
 
+/**
+ * Enum to narrow down the possible hmac algorithms
+ */
 enum HmacEncoderAlgorithms(val alg: String):
   case HmacSHA1 extends HmacEncoderAlgorithms("HmacSHA1")
   case HmacSHA224 extends HmacEncoderAlgorithms("HmacSHA224")
@@ -13,6 +16,9 @@ enum HmacEncoderAlgorithms(val alg: String):
   case HmacSHA512 extends HmacEncoderAlgorithms("HmacSHA512")
   case HmacMD5 extends HmacEncoderAlgorithms("HmacMD5")
 
+/**
+ * Implicit converters for circe
+ */
 object HmacEncoderAlgorithms:
   given Decoder[HmacEncoderAlgorithms] = (hCursor: HCursor) =>
     for

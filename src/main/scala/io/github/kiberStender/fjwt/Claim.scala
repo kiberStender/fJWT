@@ -5,6 +5,19 @@ import io.circe.{Codec, Decoder, Encoder, Json, HCursor}
 import io.circe.Decoder.Result
 import io.circe.syntax.EncoderOps
 
+/**
+ * A case class to map the claim part of the JWT
+ * @param iss The issuer of the token[Optional]
+ * @param sub The subject of the token[Optional]
+ * @param aud The intended audience of the token[Optional]
+ * @param exp The expiration time of the token[Optional]
+ * @param nbf The not before datetime(The token cannot be used before the given date) of the token[Optional]
+ * @param iat The Issued at(The time the token was issued) of the token[Optional]
+ * @param jti The token ID[Optional]
+ * @param payload The data you want to transmit itself
+ * @param codec$P$0 The implicit Codec instance to help encode the payload
+ * @tparam P The type of the Payload
+ */
 private final case class Claim[P: Codec](
     iss: Option[String],
     sub: Option[String],
@@ -16,6 +29,9 @@ private final case class Claim[P: Codec](
     payload: P
 )
 
+/**
+ * Implicit converters for circe
+ */
 private object Claim:
   given encoder[P: Codec](using EP: Encoder[P]): Encoder[Claim[P]] =
     new Encoder[Claim[P]]() {
