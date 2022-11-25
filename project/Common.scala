@@ -15,8 +15,6 @@ object Common {
 
     Global / scalacOptions                   := Seq("-source:future"),
     Global / transitiveClassifiers           := Seq(Artifact.SourceClassifier),
-    Compile / doc / sources                  := Nil,
-    Compile / packageDoc / publishArtifact   := false,
     Test / parallelExecution                 := true
   )
 
