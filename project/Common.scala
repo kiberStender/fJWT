@@ -3,16 +3,10 @@ import Keys._
 import Dependencies.{io, _}
 
 object Common {
-  val scala2Version = "2.13.10"
-  val scala3Version = "3.1.3"
+  val scala3Version = "3.2.1"
 
   lazy val settings = Seq(
-    // To make the default compiler and REPL use Dotty
     scalaVersion := scala3Version,
-
-    // To cross compile with Scala 3 and Scala 2
-    crossScalaVersions := Seq(scala2Version, scala3Version),
-
     Global / scalacOptions                   := Seq("-source:future"),
     Global / transitiveClassifiers           := Seq(Artifact.SourceClassifier),
     Test / parallelExecution                 := true
