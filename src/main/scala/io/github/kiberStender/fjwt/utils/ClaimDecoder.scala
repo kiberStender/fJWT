@@ -24,7 +24,7 @@ trait ClaimDecoder[F[*]]:
     */
   def decode[P: Codec](payload: String): F[Claim[P]]
 
-/** Object factory for {@link ClaimDecoder}[F]
+/** Instance factory for {@link ClaimDecoder}[F]
   */
 object ClaimDecoder:
   /** Method to instantiate a {@link ClaimDecoder]}[F]

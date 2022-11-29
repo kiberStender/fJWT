@@ -39,6 +39,8 @@ trait PayloadExtractor[F[*]]:
     */
   def extract[P: Codec](privateKey: String)(token: String)(using ZoneId): F[P]
 
+/** Instance factory for {@link PayloadExtractor}
+  */
 object PayloadExtractor:
   /** The method to instantiate {@link PayloadExtractor}[F] using the header algorithm field to tell
     * which Hmac algorithm was used to encode the signature
@@ -77,7 +79,8 @@ object PayloadExtractor:
     * io.github.kiberStender.fjwt.crypto.hs.HmacEncoderAlgorithms} values
     * @param base64Decoder
     *   An instance of {@link Base64Decoder}[F]
-    * @param hmacEncoder An instance of {@link HmacEncoder}[F]
+    * @param hmacEncoder
+    *   An instance of {@link HmacEncoder}[F]
     * @tparam F
     *   An instance of {@link MonadError}[F, Throwable]
     * @return

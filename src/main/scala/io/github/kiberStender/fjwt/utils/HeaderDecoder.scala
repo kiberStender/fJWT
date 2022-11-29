@@ -21,7 +21,7 @@ trait HeaderDecoder[F[*]]:
     */
   def decode(headerStr: String): F[HmacEncoder[F]]
 
-/** Object factory for {@link HeaderDecoder}[F]
+/** Instance factory for {@link HeaderDecoder}[F]
   */
 object HeaderDecoder:
   /** Method to instantiate an {@link HeaderDecoder}[F]
@@ -30,8 +30,10 @@ object HeaderDecoder:
     * @return
     *   An instance of {@link HeaderDecoder}[F]
     */
-  def dsl[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]: HeaderDecoder[F] = (headerStr: String) => parser
-    .decode[Alg](headerStr)
-    .map(_.alg)
-    .fold(_.raiseError[F, HmacEncoderAlgorithms], _.pure[F])
-    .map(HmacEncoder.hsEncoder)
+  def dsl[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]: HeaderDecoder[F] =
+    (headerStr: String) =>
+      parser
+        .decode[Alg](headerStr)
+        .map(_.alg)
+        .fold(_.raiseError[F, HmacEncoderAlgorithms], _.pure[F])
+        .map(HmacEncoder.hsEncoder)
