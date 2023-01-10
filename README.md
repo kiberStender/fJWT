@@ -4,21 +4,41 @@ Simple scala 3 library to generate and validate JWT`s (JSON Web Tokens) written 
 
 For a given hypothetical class Payload that's how one encode and decode it
 
+```scala
+final case class Payload(name: String, admin: Boolean)
+```
+
 # Encoding
 
-When encoding an object, even though the library takes care of parsing it to json, you might forget to provide the private key as it usually comes from some config file, therefore the Encoding type is MonadError[F]. This type guarantees you won't lose any errors that might come, and you will be able to treat them(See example below)
+```scala
+trait JWTEncoder[F[*], Time, P]:
+  def encode(privateKey: String)(
+      iss: Option[String] = None,
+      sub: Option[String] = None,
+      aud: Option[String] = None,
+      exp: Option[Time] = None,
+      nbf: Option[Time] = None,
+      iat: Option[Time] = None,
+      jti: Option[String] = None
+  )(payload: P): F[String]
+```
 
-In order to instantiate a JWTEncoder to start generating your JWT(JSON Web Token) tokens you will need the following:
+Encoding is the act of converting a given information into a particular form(in this case a 3 parts string). Even though the library(io.circe) takes care of parsing each part to JSON, you might forget to provide the private key as it usually comes from some config file, therefore the Encoding type is MonadError[F]. This type guarantees you won't lose any errors that might come, and you will be able to treat them(See example below)
+
+In order to instantiate a JWTEncoder to start generating your JWT(JSON Web Token) tokens using one of the two already provided implementations(JWTEncoderLong and JWTEncoderLocalDateTime)  you will need the following:
+- **Time** It is the type of time measurement you want to use. It is generic to be flexible to either user any library you want(Joda Time, Java LocalDateTime library, etc) or your own implementation like a simple Long or whatever you need at the moment  
+
+- **P** It is the type of the class you want to encode in the payload of your JWT. It needs a ```io.Circe.Codec``` instance for the JWTEncoder to be able to convert it to a JSON String
 
 - **Base64Encoder[F]** You can either use the already provided Base64Encoder(which is a simple wrapper around ```java.util.Base64``` class) using dsl method to instantiate my implementation where F is just a cats.Applicative or you can easily create your own implementation as Base64Encoder is a trait and only has one method called `encode(str: String): F[String]`
 
 - **HmacEncoder[F]** HMAC implementation (which is n wrapper to org.apache.commons.codec.digest.HmacUtils) where F is a cats.Applicative or you can easily create your own by implementing the trait HmacEncoder which has two methods: `def encode(privateKey: String)(str: String): F[String]` and `def alg: HmacEncoderAlgorithms` which is a method that tells which algorithm will actually be used to populate JWTHeader
 
-After providing these two dependencies you can easily create an instance of JWTEncoder by calling the `def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable]](base64Encoder: Base64Encoder[F], hsEncoder: HmacEncoder[F]): JWTEncoder[F]` method and by providing any instance of MonadError[F] as cited above. After you have your instance of JWTEncoder, you can create your JWT Token by using one of the two encode methods:
+- **ZoneId** An implicit instance of java.time.ZoneId object to help converting the LocalDateTime objects to Epoch milli
 
-- `def encode[P: Codec](privateKey: String)(iss: Option[String],sub: Option[String],aud: Option[String],exp: Option[LocalDateTime],nbf: Option[LocalDateTime],iat: Option[LocalDateTime],jti: Option[String])(payload: P)(using ZoneId): F[String]`:
+After providing these dependencies you can easily create an instance of JWTEncoder by calling either the JWTEncoderLong method `def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable], P: Codec](base64Encoder: Base64Encoder[F], hsEncoder: HmacEncoder[F])(using zoneId: ZoneId): JWTEncoder[F, Long, P]` or JWTEncoderLocalDateTime method `def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable], P: Codec](base64Encoder: Base64Encoder[F], hsEncoder: HmacEncoder[F])(using zoneId: ZoneId): JWTEncoder[F, LocalDateTime, P]` and by providing any instance of MonadError[F] as cited above. After you have your instance of JWTEncoder, you can create your JWT Token by using encode method:
 
-  - **P** It is the type of the class you want to encode in the payload of your JWT. It needs a ```io.Circe.Codec``` instance for the JWTEncoder to be able to convert it to a JSON String
+- `def encode(privateKey: String)(iss: Option[String], sub: Option[String],  aud: Option[String], exp: Option[Time], nbf: Option[Time], iat: Option[Time], jti: Option[String])(payload: P): F[String]`:
 
   - **privateKey: String** This is the key that will be used to encrypt both your header and payload to generate the signature of your JWT
 
@@ -28,29 +48,17 @@ After providing these two dependencies you can easily create an instance of JWTE
 
   - **aud: Option[String]** Optional intended audience
 
-  - **exp: Option[LocalDateTime]** Optional expiration time
+  - **exp: Option[Time]** Optional expiration time
 
-  - **nbf: Option[LocalDateTime]** Optional not before time
+  - **nbf: Option[Time]** Optional not before time
 
-  - **iat: Option[LocalDateTime]** Optional issued at time
+  - **iat: Option[Time]** Optional issued at time
 
   - **jti: Option[String]** Optional JWT ID
 
   - **payload: P** It is the payload itself. An instance of P that you have to provide
 
-  - **ZoneId** An implicit instance of java.time.ZoneId object to help converting the LocalDateTime objects to Epoch milli
-
-- `def encode[P: Codec](privateKey: String)(payload: P)(using ZoneId): F[String]`:
-
-  - **P** It is the type of the class you want to encode in the payload of your JWT. It needs a ```io.Circe.Codec``` instance for the JWTEncoder to be able to convert it to a JSON String
-
-  - **privateKey: String** This is the key that will be used to encrypt both your header and payload to generate the signature of your JWT
-
-  - **payload: P** It is the payload itself. An instance of P that you have to provide
-
-  - **ZoneId** An implicit instance of java.time.ZoneId object to help converting iat to Epoch milli that you can control
-
-Example:
+Example with simple Long value:
 
 ```scala
 import cats.*, cats.syntax.all.*
@@ -61,17 +69,50 @@ import java.time.Instant
 
 import io.github.kiberStender.fjwt.crypto.base64.Base64Encoder
 import io.github.kiberStender.fjwt.crypto.hs.HmacEncoder
-import io.github.kiberStender.fjwt.JWTEncoder
 
 type F = [T] =>> Either[Throwable, T]
 lazy val base64Encoder: Base64Encoder[F] = Base64Encoder.dsl
 lazy val hs512Encoder: HmacEncoder[F] = HmacEncoder.hs512Encoder
-lazy val encoder: JWTEncoder[F] = JWTEncoder.dsl(base64Encoder, hs512Encoder)
 given zoneId: ZoneId = ZoneId.of("UTC")
 
 final case class Payload(name: String, admin: Boolean)
 
 given Encoder[Payload] = io.circe.generic.semiauto.deriveCodec
+
+lazy val encoder: JWTEncoder[F, Long, Payload] = JWTEncoderLong.dsl(base64Encoder, hs512Encoder)
+
+val payload: Payload = Payload("John Doe", true)
+val privateKey: String = "a-super-secret-key"
+val sub: Option[String] = Some("1234567890")
+val iat: Option[Long] = Some(1516239022)
+val exp: Option[Long] = Some(1516239150)
+
+val encoded = encoder.encode(key)(sub = sub, exp = exp, iat = iat)(payload)
+
+```
+
+Example with LocalDateTime value:
+
+```scala
+import cats.*, cats.syntax.all.*
+import io.circe.*
+
+import java.time.ZoneId
+import java.time.Instant
+
+import io.github.kiberStender.fjwt.crypto.base64.Base64Encoder
+import io.github.kiberStender.fjwt.crypto.hs.HmacEncoder
+
+type F = [T] =>> Either[Throwable, T]
+lazy val base64Encoder: Base64Encoder[F] = Base64Encoder.dsl
+lazy val hs512Encoder: HmacEncoder[F] = HmacEncoder.hs512Encoder
+given zoneId: ZoneId = ZoneId.of("UTC")
+
+final case class Payload(name: String, admin: Boolean)
+
+given Encoder[Payload] = io.circe.generic.semiauto.deriveCodec
+
+lazy val encoder: JWTEncoder[F, LocalDateTime, Payload] = JWTEncoderLocalDateTime.dsl(base64Encoder, hs512Encoder)
 
 val payload: Payload = Payload("John Doe", true)
 val privateKey: String = "a-super-secret-key"
