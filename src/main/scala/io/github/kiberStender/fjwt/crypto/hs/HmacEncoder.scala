@@ -39,7 +39,7 @@ object HmacEncoder:
     *   An {@link HmacEncoder}[F] implemented with SHA1
     */
   def hs1Encoder[F[*]: Applicative]: HmacEncoder[F] =
-    new HmacEncoder:
+    new HmacEncoder[F]:
       val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HmacSHA1
       def encode(privateKey: String)(str: String): F[String] = hmacEncoder(alg)(privateKey)(str)
 
@@ -51,7 +51,7 @@ object HmacEncoder:
     *   An {@link HmacEncoder}[F] implemented with SHA224
     */
   def hs224Encoder[F[*]: Applicative]: HmacEncoder[F] =
-    new HmacEncoder:
+    new HmacEncoder[F]:
       val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HmacSHA224
       def encode(privateKey: String)(str: String): F[String] = hmacEncoder(alg)(privateKey)(str)
 
@@ -63,7 +63,7 @@ object HmacEncoder:
     *   An {@link HmacEncoder}[F] implemented with SHA256
     */
   def hs256Encoder[F[*]: Applicative]: HmacEncoder[F] =
-    new HmacEncoder:
+    new HmacEncoder[F]:
       val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HmacSHA256
       def encode(privateKey: String)(str: String): F[String] = hmacEncoder(alg)(privateKey)(str)
 
@@ -75,7 +75,7 @@ object HmacEncoder:
     *   An {@link HmacEncoder}[F] implemented with SHA384
     */
   def hs384Encoder[F[*]: Applicative]: HmacEncoder[F] =
-    new HmacEncoder:
+    new HmacEncoder[F]:
       val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HmacSHA384
       def encode(privateKey: String)(str: String): F[String] = hmacEncoder(alg)(privateKey)(str)
 
@@ -87,7 +87,7 @@ object HmacEncoder:
     *   An {@link HmacEncoder}[F] implemented with SHA512
     */
   def hs512Encoder[F[*]: Applicative]: HmacEncoder[F] =
-    new HmacEncoder:
+    new HmacEncoder[F]:
       val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HmacSHA512
       def encode(privateKey: String)(str: String): F[String] = hmacEncoder(alg)(privateKey)(str)
 
@@ -99,7 +99,7 @@ object HmacEncoder:
     *   An {@link HmacEncoder}[F] implemented with MD5
     */
   def hMD5Encoder[F[*]: Applicative]: HmacEncoder[F] =
-    new HmacEncoder:
+    new HmacEncoder[F]:
       val alg: HmacEncoderAlgorithms = HmacEncoderAlgorithms.HmacMD5
       def encode(privateKey: String)(str: String): F[String] = hmacEncoder(alg)(privateKey)(str)
 
