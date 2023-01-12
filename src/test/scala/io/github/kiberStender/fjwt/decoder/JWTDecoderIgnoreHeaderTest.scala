@@ -9,6 +9,7 @@ import io.circe.syntax.*
 import io.github.kiberStender.fjwt.crypto.base64.Base64Decoder
 import io.github.kiberStender.fjwt.crypto.hs.HmacEncoder
 import io.github.kiberStender.fjwt.error.JWTError
+import io.github.kiberStender.fjwt.payload.*
 import io.github.kiberStender.fjwt.utils.PayloadExtractor
 import org.scalatest.flatspec.AnyFlatSpecLike
 
@@ -18,13 +19,8 @@ class JWTDecoderIgnoreHeaderTest extends AnyFlatSpecLike:
   private type F = [T] =>> Either[Throwable, T]
   private lazy val base64Decoder: Base64Decoder[F] = Base64Decoder.dsl
   private lazy val hmacEncoder: HmacEncoder[F] = HmacEncoder.hs512Encoder
-  private lazy val payloadExtractor: PayloadExtractor[F] = PayloadExtractor.dsl(base64Decoder, hmacEncoder)
-  private lazy val decoder: JWTDecoder[F] = JWTDecoder.dsl(payloadExtractor)
+  private lazy val decoder: JWTDecoder[F, Payload] = JWTDecoder.dsl(base64Decoder, hmacEncoder)
   private given ZoneId = ZoneId.of("UTC")
-
-  private final case class Payload(name: String, admin: Boolean)
-
-  private given Codec[Payload] = io.circe.generic.semiauto.deriveCodec
 
   "JWTDecoderIgnoreHeader" should "decode a JWT token into a Payload object" in {
     // GIVEN
