@@ -7,6 +7,7 @@ import cats.syntax.all.{catsSyntaxApplicativeErrorId, catsSyntaxApplicativeId, c
 import io.github.kiberStender.fjwt.crypto.base64.Base64Encoder
 import io.github.kiberStender.fjwt.crypto.hs.HmacEncoder
 import io.github.kiberStender.fjwt.error.JWTError
+import io.github.kiberStender.fjwt.payload.Payload
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 import java.time.{Instant, LocalDateTime, ZoneId}
