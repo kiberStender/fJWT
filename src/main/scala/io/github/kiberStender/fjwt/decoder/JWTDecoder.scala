@@ -1,19 +1,15 @@
 package io.github.kiberStender
 package fjwt
+package decoder
 
 import cats.MonadError
 import cats.syntax.all.{toFlatMapOps, toFunctorOps}
 import io.circe.Codec
 import io.github.kiberStender.fjwt.crypto.base64.Base64Decoder
 import io.github.kiberStender.fjwt.crypto.hs.HmacEncoder
+import io.github.kiberStender.fjwt.error.JWTError.{EmptyPrivateKey, EmptyToken, NullPrivateKey, NullToken}
 import io.github.kiberStender.fjwt.utils.PayloadExtractor
 import io.github.kiberStender.fjwt.validation.StringValidation
-import io.github.kiberStender.fjwt.error.JWTError.{
-  EmptyPrivateKey,
-  EmptyToken,
-  NullPrivateKey,
-  NullToken
-}
 
 import java.time.ZoneId
 
