@@ -12,15 +12,11 @@ import cats.syntax.all.{
 import io.circe.Codec
 import io.circe.syntax.EncoderOps
 import io.github.kiberStender.fjwt.crypto.base64.Base64Encoder
-import io.github.kiberStender.fjwt.crypto.hs.HmacEncoder
 import io.github.kiberStender.fjwt.error.JWTError.{EmptyPrivateKey, NullPrivateKey}
-import io.github.kiberStender.fjwt.validation.StringValidation
-
-import io.github.kiberStender.fjwt.utils.toEpoch
 
 import java.time.{LocalDateTime, ZoneId}
 
-/** A trait that describes the JWTEncoder typeclass
+/** A trait that describes the [[JWTEncoder]] typeclass
   *
   * @tparam F
   *   A given container that wraps the return type
@@ -30,8 +26,8 @@ import java.time.{LocalDateTime, ZoneId}
   *   The type of the Payload
   */
 trait JWTEncoder[F[*], Time, P]:
-  /** A method to encode a given payload data described by the type P into a encrypted {@link
-    * String} value
+  /** A method to encode a given payload data described by the type P into a encrypted [[String]]
+    * value
     *
     * @param privateKey
     *   The key that will be used to encode the payload
@@ -53,7 +49,7 @@ trait JWTEncoder[F[*], Time, P]:
     * @param payload
     *   The data you want to transmit itself
     * @return
-    *   The encoded {@link String} or an error wrapped in F
+    *   The encoded [[String]] or an error wrapped in F
     */
   def encode(privateKey: String)(
       iss: Option[String] = None,
