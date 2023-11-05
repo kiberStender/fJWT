@@ -1,26 +1,35 @@
 package io.github.kiberStender.fjwt.crypto.hs
 
-import io.github.kiberStender.fjwt.error.JWTError.{EmptyPrivateKey, EmptyToken, NullPrivateKey, NullToken}
+import io.github.kiberStender.fjwt.error.JWTError.{
+  EmptyPrivateKey,
+  EmptyToken,
+  NullPrivateKey,
+  NullToken
+}
 import cats.syntax.all.catsSyntaxApplicativeId
 import cats.syntax.all.catsSyntaxApplicativeErrorId
+import io.github.kiberStender.fjwt.crypto.hs.HmacEncoderAlgorithms.HmacSHA384
 import io.github.kiberStender.fjwt.error.JWTError
 import org.scalatest.flatspec.AnyFlatSpecLike
 
 class HS384EncoderTest extends AnyFlatSpecLike:
   private type F = [T] =>> Either[Throwable, T]
-  private lazy val encoder: HmacEncoder[F] = HmacEncoder.hs384Encoder
+  private lazy val encoder: HmacEncoderAlgorithms = HmacSHA384
 
   "HS384Encoder" should "encrypt a JWT Token" in {
     // GIVEN
-    val privatekey = "kleber-super-secret-key"
-    val header = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9"
-    val payload = "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0="
-    val input = s"$header.$payload"
-    val expected = "047d40827bec542ba8fead697bdc99315695be4f9d16457f6d4900008f12eb365ba10019c70c666e2a4848d8716a7a90".pure[F]
+    val key = "super-secret-key-sixty-four-characters-long-to-satisfy-test-please"
+    val input = "test"
+    val expected: Array[Byte] =
+      Array(
+        -76, 120, 97, 46, -34, 102, 55, -28, 113, -39, 8, 102, -127, -19, -86, -120, -62, -27, 14,
+        120, 121, 43, 46, 11, -61, -119, 102, 82, 8, -60, 116, -51, -44, -124, 11, 78, -28, -52,
+        -73, -84, -41, -10, 78, -82, 12, 46, -56, -104
+      )
 
     // WHEN
-    val actual = encoder.encode(privatekey)(input)
+    val actual: F[Array[Byte]] = encoder.encode(key)(input)
 
     // THEN
-    assert(expected === actual)
+    actual.map(value => assert(value === expected))
   }
