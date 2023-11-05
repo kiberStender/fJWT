@@ -53,7 +53,7 @@ package object fjwt:
         : F[(String, String)] =
       str split "\\." match
         case Array(header, payload, _*) => (header, payload).pure[F]
-        case _                         => Not2TokenParts.raiseError[F, (String, String)]
+        case _                          => Not2TokenParts.raiseError[F, (String, String)]
 
     private[fjwt] def is3Parts[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]
         : F[(String, String, String)] =

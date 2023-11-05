@@ -3,17 +3,29 @@ package fjwt
 package decoder
 
 import cats.MonadError
-import cats.syntax.all.{toFlatMapOps, toFunctorOps}
-import io.circe.Codec
-import io.github.kiberStender.fjwt.crypto.base64.Base64Decoder
-import io.github.kiberStender.fjwt.crypto.hs.HmacEncoder
-import io.github.kiberStender.fjwt.error.JWTError.{EmptyPrivateKey, EmptyToken, NullPrivateKey, NullToken}
-import io.github.kiberStender.fjwt.utils.PayloadExtractor
-import io.github.kiberStender.fjwt.validation.StringValidation
+import cats.syntax.all.{
+  catsSyntaxApplicativeId,
+  catsSyntaxApplicativeErrorId,
+  toFlatMapOps,
+  toFunctorOps
+}
+import io.circe.{Codec, parser}
+import io.github.kiberStender.fjwt.crypto.base64.{Base64Decoder, Base64Encoder}
+import io.github.kiberStender.fjwt.crypto.hs.HmacEncoderAlgorithms
+import io.github.kiberStender.fjwt.error.JWTError.{
+  EmptyPrivateKey,
+  EmptyToken,
+  NotMappedError,
+  NullPrivateKey,
+  NullToken
+}
+import io.github.kiberStender.fjwt.model.{Alg, Claim}
+import io.github.kiberStender.fjwt.model
+import io.github.kiberStender.fjwt.validation.Payload.*
 
 import java.time.ZoneId
 
-/** A trait that describes the {@link JWTDecoder} typeclass
+/** A trait that describes the [[JWTDecoder]] typeclass
   * @tparam F
   *   A given container that wraps the return type
   * @tparam P
@@ -28,64 +40,192 @@ trait JWTDecoder[F[*], P]:
     * @return
     *   The payload object wrapped in F or an Error wrapped in F describing the problem
     */
-  def decode(privateKey: String)(accessToken: String): F[P]
+  def decode(privateKey: String)(accessToken: String): F[Payload[P]]
 
-/** Instance factory for {@link JWTDecoder}
+/** Instance factory for [[JWTDecoder]]
   */
 object JWTDecoder:
-  private def decodeJWT[F[*]: [F[*]] =>> MonadError[F, Throwable], P: Codec](
-      payloadExtractor: PayloadExtractor[F, P],
-      stringValidation: StringValidation[F]
-  )(privateKey: String)(accessToken: String): F[P] =
-    for
-      key <- stringValidation.validate(privateKey)(NullPrivateKey)(EmptyPrivateKey)
-      token <- stringValidation.validate(accessToken)(NullToken)(EmptyToken)
-      payload <- payloadExtractor.extract(key)(token)
-    yield payload
+  private def extractPayload[F[*]: [F[*]] =>> MonadError[F, Throwable], P: Codec](
+      jwtPayload: String
+  ): F[Payload[P]] =
+    (for
+      claim <- parser.decode[Claim](jwtPayload)
+      p <- parser.decode[P](jwtPayload)
+    yield (claim, p))
+      .fold(
+        throwable => NotMappedError(throwable.getMessage).raiseError[F, Payload[P]],
+        _.pure[F]
+      )
 
-  /** A method to instantiate a {@link JWTDecoder}[F, P] that loads the Hmac algorythmn based on the
-    * token's header
+  private def extractAlg[F[*]: [F[*]] =>> MonadError[F, Throwable]](
+      headerStr: String
+  ): F[HmacEncoderAlgorithms] =
+    parser
+      .decode[Alg](headerStr)
+      .map(_.toHmacAlgorithms)
+      .fold(_.raiseError[F, HmacEncoderAlgorithms], _.pure[F])
+
+  /** A method to instantiate a [[JWTDecoder]][F, P] that performs no validation on the token. It
+    * only extracts the payload/claim and try to parse the json PS: Not recommended for production
+    * code. Use with care
     * @param base64Decoder
-    *   An instance of {@link Base64Decoder}[F]
-    * @param ZoneId
-    *   The {@link ZoneId} used to encode the the claim temporal values
+    *   An instance of [[Base64Decoder]][F] used to decode the encrypted payload
     * @tparam F
-    *   An instance of {@link MonadError}[F, Throwable]
+    *   An instance of [[MonadError]][F, [[Throwable]]]
     * @tparam P
     *   The type of the Payload to be decoded
     * @return
-    *   Either the decoded Payload P or an Exception
+    *   Either the decoded and parsed Payload P or an [[Throwable]]
     */
-  def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable], P: Codec](
+  def noValidation[F[*]: [F[*]] =>> MonadError[F, Throwable], P: Codec](
+      base64Decoder: Base64Decoder[F]
+  ): JWTDecoder[F, P] = new JWTDecoder[F, P]:
+    def decode(privateKey: String)(accessToken: String): F[Payload[P]] =
+      for
+        (_, encodedPayloadStr) <- accessToken.is2Parts
+        decodedPayloadStr <- base64Decoder decode encodedPayloadStr
+        payload <- extractPayload(decodedPayloadStr)
+      yield payload
+
+  /** A method to instantiate a [[JWTDecoder]][F, P] that uses the header to find out what algorithm
+    * was used to sign the token and performs no expiration validation
+    * @param base64Encoder
+    *   An instance of [[Base64Encoder]][F] used to verify the signature of the token
+    * @param base64Decoder
+    *   An instance of [[Base64Decoder]][F] used to decode the encrypted payload
+    * @tparam F
+    *   An instance of [[MonadError]][F, [[Throwable]]]
+    * @tparam P
+    *   The type of the Payload to be decoded
+    * @return
+    *   Either the decoded and parsed Payload P or an [[Throwable]]
+    */
+  def useHeaderNoExpirationValidation[F[*]: [F[*]] =>> MonadError[F, Throwable], P: Codec](
+      base64Encoder: Base64Encoder[F],
+      base64Decoder: Base64Decoder[F]
+  ): JWTDecoder[F, P] = new JWTDecoder[F, P]:
+    def decode(privateKey: String)(accessToken: String): F[Payload[P]] =
+      for
+        key <- privateKey.isEmptyValue(NullPrivateKey)(EmptyPrivateKey)
+        token <- accessToken.isEmptyValue(NullToken)(EmptyToken)
+        (encodedHeaderStr, encodedPayloadStr, origSignature) <- token.is3Parts
+        decodedHeader <- base64Decoder decode encodedHeaderStr
+        decodeAlg <- extractAlg(decodedHeader)
+        bodyToValidate = s"$encodedHeaderStr.$encodedPayloadStr"
+        byteSig <- decodeAlg.encode(key)(bodyToValidate)
+        calculatedSig <- base64Encoder encodeURLSafe byteSig
+        _ <- calculatedSig isValidSignature origSignature
+        decodedPayloadStr <- base64Decoder decode encodedPayloadStr
+        payload <- extractPayload(decodedPayloadStr)
+      yield payload
+
+  /** A method to instantiate a [[JWTDecoder]][F, P] that ignores the header and uses the provided
+    * algorithm check the token signatures and performs no expiration validation
+    *
+    * PS: This method assumes you know what algorithm was used to sig the token to be decoded
+    * @param base64Encoder
+    *   An instance of [[Base64Encoder]][F] used to verify the signature of the token
+    * @param base64Decoder
+    *   An instance of [[Base64Decoder]][F] used to decode the encrypted payload
+    * @param encodeAlg
+    *   An instance of [[HmacEncoder]][F] used to verify the integrity of the token signature
+    * @tparam F
+    *   An instance of [[MonadError]][F, [[Throwable]]]
+    * @tparam P
+    *   The type of the Payload to be decoded
+    * @return
+    *   Either the decoded and parsed Payload P or an [[Throwable]]
+    */
+  def noExpirationValidation[F[*]: [F[*]] =>> MonadError[F, Throwable], P: Codec](
+      base64Encoder: Base64Encoder[F],
+      base64Decoder: Base64Decoder[F],
+      encodeAlg: HmacEncoderAlgorithms
+  ): JWTDecoder[F, P] = new JWTDecoder[F, P]:
+    def decode(privateKey: String)(accessToken: String): F[Payload[P]] =
+      for
+        key <- privateKey.isEmptyValue(NullPrivateKey)(EmptyPrivateKey)
+        token <- accessToken.isEmptyValue(NullToken)(EmptyToken)
+        (encodedHeaderStr, encodedPayloadStr, origSignature) <- token.is3Parts
+        decodedHeader <- base64Decoder decode encodedHeaderStr
+        bodyToValidate = s"$encodedHeaderStr.$encodedPayloadStr"
+        byteSig <- encodeAlg.encode(key)(bodyToValidate)
+        calculatedSig <- base64Encoder encodeURLSafe byteSig
+        _ <- calculatedSig isValidSignature origSignature
+        decodedPayloadStr <- base64Decoder decode encodedPayloadStr
+        payload <- extractPayload(decodedPayloadStr)
+      yield payload
+
+  /** A method to instantiate a [[JWTDecoder]][F, P] that uses the header to find out what algorithm
+    * was used to sign the token and performs both signature validation and expiration validation
+    * @param base64Encoder
+    *   An instance of [[Base64Encoder]][F] used to verify the signature of the token
+    * @param base64Decoder
+    *   An instance of [[Base64Decoder]][F] used to decode the encrypted payload
+    * @param ZoneId
+    *   The [[ZoneId]] used to encode the the claim temporal values
+    * @tparam F
+    *   An instance of [[MonadError]][F, [[Throwable]]]
+    * @tparam P
+    *   The type of the Payload to be decoded
+    * @return
+    *   Either the decoded and parsed Payload P or an [[Throwable]]
+    */
+  def useHeaderAllValidations[F[*]: [F[*]] =>> MonadError[F, Throwable], P: Codec](
+      base64Encoder: Base64Encoder[F],
       base64Decoder: Base64Decoder[F]
   )(using ZoneId): JWTDecoder[F, P] = new JWTDecoder[F, P]:
-    lazy val payloadExtractor: PayloadExtractor[F, P] = PayloadExtractor.dsl(base64Decoder)
-    lazy val stringValidation: StringValidation[F] = StringValidation.dsl
+    def decode(privateKey: String)(accessToken: String): F[Payload[P]] =
+      for
+        key <- privateKey.isEmptyValue(NullPrivateKey)(EmptyPrivateKey)
+        token <- accessToken.isEmptyValue(NullToken)(EmptyToken)
+        (encodedHeaderStr, encodedPayloadStr, origSignature) <- token.is3Parts
+        decodedHeader <- base64Decoder decode encodedHeaderStr
+        decodeAlg <- extractAlg(decodedHeader)
+        bodyToValidate = s"$encodedHeaderStr.$encodedPayloadStr"
+        byteSig <- decodeAlg.encode(key)(bodyToValidate)
+        calculatedSig <- base64Encoder encodeURLSafe byteSig
+        _ <- calculatedSig isValidSignature origSignature
+        decodedPayloadStr <- base64Decoder decode encodedPayloadStr
+        payload <- extractPayload(decodedPayloadStr)
+        notExpiredPayload <- payload.isExpired
+      yield notExpiredPayload
 
-    def decode(privateKey: String)(accessToken: String): F[P] =
-      decodeJWT(payloadExtractor, stringValidation)(privateKey)(accessToken)
-
-  /** A method to instantiate a {@link JWTDecoder} that ignores the token's header
+  /** A method to instantiate a [[JWTDecoder]][F, P] that ignores the header and uses the provided
+    * algorithm to check the token signature and performs both signature validation and expiration
+    * validation
+    *
+    * PS: This method assumes you know what algorithm was used to sig the token to be decoded
+    * @param base64Encoder
+    *   An instance of [[Base64Encoder]][F] used to verify the signature of the token
     * @param base64Decoder
-    *   An instance of {@link Base64Decoder}[F]
-    * @param hmacEncoder
-    *   An instance of {@link HmacEncoder}[F]
+    *   An instance of [[Base64Decoder]][F] used to decode the encrypted payload
+    * @param encodeAlg
+    *   An instance of [[HmacEncoder]][F] used to verify the integrity of the token signature
     * @param ZoneId
-    *   The {@link ZoneId} used to encode the the claim temporal values
+    *   The [[ZoneId]] used to encode the the claim temporal values
     * @tparam F
-    *   An instance of {@link MonadError}[F, Throwable]
+    *   An instance of [[MonadError]][F, [[Throwable]]]
     * @tparam P
     *   The type of the Payload to be decoded
     * @return
-    *   Either the decoded Payload P or an Exception
+    *   Either the decoded and parsed Payload P or an [[Throwable]]
     */
-  def dsl[F[*]: [F[*]] =>> MonadError[F, Throwable], P: Codec](
+  def allValidations[F[*]: [F[*]] =>> MonadError[F, Throwable], P: Codec](
+      base64Encoder: Base64Encoder[F],
       base64Decoder: Base64Decoder[F],
-      hmacEncoder: HmacEncoder[F]
+      encodeAlg: HmacEncoderAlgorithms
   )(using ZoneId): JWTDecoder[F, P] = new JWTDecoder[F, P]:
-    lazy val payloadExtractor: PayloadExtractor[F, P] =
-      PayloadExtractor.dsl(base64Decoder, hmacEncoder)
-    lazy val stringValidation: StringValidation[F] = StringValidation.dsl
-
-    def decode(privateKey: String)(accessToken: String): F[P] =
-      decodeJWT(payloadExtractor, stringValidation)(privateKey)(accessToken)
+    def decode(privateKey: String)(accessToken: String): F[Payload[P]] =
+      for
+        key <- privateKey.isEmptyValue(NullPrivateKey)(EmptyPrivateKey)
+        token <- accessToken.isEmptyValue(NullToken)(EmptyToken)
+        (encodedHeaderStr, encodedPayloadStr, origSignature) <- token.is3Parts
+        decodedHeader <- base64Decoder decode encodedHeaderStr
+        bodyToValidate = s"$encodedHeaderStr.$encodedPayloadStr"
+        byteSig <- encodeAlg.encode(key)(bodyToValidate)
+        calculatedSig <- base64Encoder encodeURLSafe byteSig
+        _ <- calculatedSig isValidSignature origSignature
+        decodedPayloadStr <- base64Decoder decode encodedPayloadStr
+        payload <- extractPayload(decodedPayloadStr)
+        notExpiredPayload <- payload.isExpired
+      yield notExpiredPayload
