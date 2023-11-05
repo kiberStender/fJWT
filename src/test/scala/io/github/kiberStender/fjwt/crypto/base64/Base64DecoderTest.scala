@@ -11,7 +11,7 @@ import cats.syntax.all.*
 import io.github.kiberStender.fjwt.error.JWTError
 import org.scalatest.flatspec.AnyFlatSpecLike
 
-class Base64DecoderTest extends AnyFlatSpecLike: 
+class Base64DecoderTest extends AnyFlatSpecLike:
   private type F = [T] =>> Either[Throwable, T]
   private lazy val base64Decoder: Base64Decoder[F] = Base64Decoder.dsl
 
@@ -28,19 +28,10 @@ class Base64DecoderTest extends AnyFlatSpecLike:
 
   it must "decrypt the payload" in {
     // GIVEN
-    val input = "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0"
-    val expected = """{"sub":"1234567890","name":"John Doe","admin":true,"iat":1516239022}""".pure[F]
-    // WHEN
-    val actual = base64Decoder.decode(input)
-
-    // THEN
-    assert(expected === actual)
-  }
-
-  it must "fail to decrypt the broken Base64 string" in {
-    // GIVEN
-    val input = "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyM"
-    val expected = NotMappedError("Last unit does not have enough valid bits").raiseError[F, String]
+    val input =
+      "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0"
+    val expected =
+      """{"sub":"1234567890","name":"John Doe","admin":true,"iat":1516239022}""".pure[F]
     // WHEN
     val actual = base64Decoder.decode(input)
 

@@ -8,7 +8,7 @@ import io.github.kiberStender.fjwt.error.JWTError.NotMappedError
 import cats.ApplicativeError
 import cats.syntax.all.{catsSyntaxApplicativeErrorId, catsSyntaxApplicativeId}
 
-import java.util.Base64
+import org.apache.commons.codec.binary.Base64
 
 /** A trait describing A {@link Base64Decoder}
   * @tparam F
@@ -26,7 +26,6 @@ trait Base64Decoder[F[*]]:
 /** Instance factor for {@link Base64Decoder}
   */
 object Base64Decoder:
-  private lazy val decoder: Base64.Decoder = Base64.getDecoder
 
   /** Generates an instance of {@link Base64Decoder}
     * @tparam F
@@ -36,7 +35,7 @@ object Base64Decoder:
     */
   def dsl[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]: Base64Decoder[F] = (str: String) =>
     try {
-      new String(decoder decode str).pure[F]
+      new String(Base64 decodeBase64 str).pure[F]
     } catch {
       case iae: IllegalArgumentException => NotMappedError(iae.getMessage).raiseError[F, String]
     }
