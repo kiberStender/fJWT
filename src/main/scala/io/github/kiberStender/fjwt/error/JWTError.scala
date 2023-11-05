@@ -12,4 +12,5 @@ enum JWTError(val message: String) extends Throwable(message):
   case EmptyPrivateKey extends JWTError("Private key cannot be empty")
   case NullToken extends JWTError("Token cannot null")
   case EmptyToken extends JWTError("Token cannot be empty")
-  case WrongTokenParts extends JWTError("Token has to has 3 parts: header.payload.signature")
+  case Not2TokenParts extends JWTError("Token has less than 2 parts: header.payload")
+  case Not3TokenParts extends JWTError("Token has less than 3 parts: header.payload.signature")
