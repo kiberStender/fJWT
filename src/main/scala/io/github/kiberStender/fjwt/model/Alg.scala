@@ -26,7 +26,7 @@ object Alg:
   }
   extension (alg: Alg) {
     def toHmacAlgorithms: HmacEncoderAlgorithms = alg match {
-      case Alg("HS1", _) => HmacSHA1
+      case Alg("HS1", _)   => HmacSHA1
       case Alg("HS224", _) => HmacSHA224
       case Alg("HS256", _) => HmacSHA256
       case Alg("HS384", _) => HmacSHA384
