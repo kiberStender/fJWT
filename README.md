@@ -670,7 +670,7 @@ implicit def jsonLongDecoderCirce[F[*]: ApplicativeError[*[*], Throwable]]: Json
   def decode(json: String): F[Payload] = // Your code here
 }
 
-implicit def jsonLongEncoderCirce[F[*]: ApplicativeError[*[*], Throwable]]: JsonEncoder[Payload] = new JsonEncoder[Payload] {
+implicit def jsonLongEncoderCirce[F[*]: ApplicativeError[*[*], Throwable]]: JsonEncoder[F, Payload] = new JsonEncoder[F, Payload] {
   def encode(json: Payload): F[String] = // Your code here
 }
 ```
