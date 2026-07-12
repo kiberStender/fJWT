@@ -1,4 +1,5 @@
 import xerial.sbt.Sonatype._
+import Dependencies.{io, *}
 
 ThisBuild / organization := "io.github.kiberStender"
 ThisBuild / description := "Simple Scala 3 JWT encoder/decoder written using Tagless final encoding"
@@ -44,4 +45,22 @@ lazy val root = (project in file("."))
   .settings(name := "fJWT")
   .settings(Common.settings: _*)
   .settings(libraryDependencies ++= Common.dependencies)
-  .enablePlugins(JavaAppPackaging)
+  .settings(
+    assembly / assemblyJarName := s"fjwt_${scalaBinaryVersion.value}-${version.value}.jar",
+    assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", "services", _ @ _*) => MergeStrategy.concat
+      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+      case x if x.endsWith("module-info.class") => MergeStrategy.discard
+      case _ => MergeStrategy.first
+    }
+  )
+  .settings(libraryDependencies ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, _)) =>
+        List(
+          compilerPlugin(org.typelevel.`kind-projector`),
+          compilerPlugin(com.olegpy.`better-monadic-for`)
+        )
+      case _                       => Nil
+    }
+  })
