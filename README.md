@@ -696,13 +696,13 @@ But I'm going to start new repos here on github to publish this project once aga
 
 This will have only `JWTEncoder`, `JWTDecoder`, `FromLong` and `ToLong`  implemented and every other dependency will be only traits, to keep the jar as minimal as possible.
 
-Even `FromLong` and `ToLong` will only have two implementations(which already exist) Long and java.util.LocalDate time, as they already come with Scala, it will not increase the jar size in a bad way
+Even `FromLong` and `ToLong` will only have two implementations(which already exist) Long and java.util.LocalDatetime, as they already come with Scala, it will not increase the jar size in a bad way
 
 ### FJWT-Crypto
 
-Will contain the implementation for `Base64Encoder`, `Base64Decoder` and `Hmac`  using apache commons codec, so people can add it if they want or as mentioned, use their own library to implemented them if they feel like
+Will contain the implementation for `Base64Encoder`, `Base64Decoder` and `Hmac`  using Apache Commons codec, so people can add it if they want or as mentioned, use their own library to implemented them if they feel like
 
-In order to use the old version of this library just add it to your build dependency list(Be ware, this version only works with scala 3)
+In order to use the old version of this library just add it to your build dependency list(Beware, this version only works with scala 3)
 ```scala
 libraryDependencies += "io.github.kiberStender" %% "fjwt" % "1.0.3"
 ```
