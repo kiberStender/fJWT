@@ -2,7 +2,7 @@ import xerial.sbt.Sonatype._
 import Dependencies.{io, *}
 
 ThisBuild / organization := "io.github.kiberStender"
-ThisBuild / description := "Simple Scala 3 JWT encoder/decoder written using Tagless final encoding"
+ThisBuild / description := "Simple Scala 2/3 JWT encoder/decoder written using Tagless final encoding"
 ThisBuild / homepage := Some(url("https://github.com/kiberStender/fJWT"))
 ThisBuild / scmInfo := Some(ScmInfo(url("https://github.com/kiberStender/fJWT"), "git@github.com:kiberStender/fJWT.git"))
 ThisBuild / developers := List(Developer(id = "1076952", name = "Kleber Eduardo Scalise Stender", email = "kleberstenderdev@gmail.com", url = url("https://github.com/kiberStender")))
