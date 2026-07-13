@@ -6,8 +6,6 @@ package exception
   */
 sealed trait JWTError extends Throwable {
   def message: String
-
-  override def toString: String = message
 }
 
 object JWTError {

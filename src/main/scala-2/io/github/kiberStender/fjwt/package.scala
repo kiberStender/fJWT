@@ -123,8 +123,8 @@ package object fjwt {
   implicit class LongOps(n: Long) {
 
     /** A helper method to convert a Long object to a [[LocalDateTime]]
-      * @param zoneId
-      * @return
+      * @param zoneId The time zone of the user to properly convert the [[LocalDateTime]] to a Long object
+      * @return A [[LocalDateTime]] instance
       */
     def toLocalDateTime(implicit zoneId: ZoneId): LocalDateTime =
       Instant.ofEpochMilli(n).atZone(zoneId).toLocalDateTime
@@ -135,7 +135,7 @@ package object fjwt {
     /** A helper method to convert a [[LocalDateTime]] object to a Long
       * @param zoneId
       *   The time zone of the user to properly convert the [[LocalDateTime]] to a Long object
-      * @return
+      * @return A Long instance
       */
     def toEpochMilli(implicit zoneId: ZoneId): Long =
       ZonedDateTime.of(ldt, zoneId).toInstant.toEpochMilli

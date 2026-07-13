@@ -23,8 +23,10 @@ import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm
   *
   * @tparam F
   *   A given container that wraps the return type
-  * @tparam C
-  *   The type of claim
+  * @tparam T
+  *   It is the type of time measurement you want to use. It is generic to be flexible to either
+  *   user any library you want(Joda Time, Java LocalDateTime library, etc) or your own
+  *   implementation like a simple Long or whatever you need at the moment
   * @tparam P
   *   The type of the Payload to be decoded
   */

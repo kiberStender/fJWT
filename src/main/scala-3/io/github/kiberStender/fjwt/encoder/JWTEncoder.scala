@@ -16,8 +16,8 @@ import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm
 /** A trait that describes the [[JWTEncoder]] typeclass
   * @tparam F
   *   A given container that wraps the return type
-  * @tparam C
-  *   The type of claim
+  * @tparam T
+  *   The type of the time unit in the claim
   * @tparam P
   *   The type of the Payload
   */

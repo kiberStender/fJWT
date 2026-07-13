@@ -17,7 +17,7 @@ object AlgTasks {
       * @tparam F
       *   The effect type
       * @return
-      *   Either an intance of [[HmacAlgorithm]] or an [[InvalidAlgError]]
+      *   Either an instance of [[HmacAlgorithm]] or an [[InvalidAlgError]]
       */
     private[fjwt] def extractAlg[F[*]: MonadError[*[_], Throwable]]: F[HmacAlgorithm] = {
       extractField[F](""""alg"\s*:\s*"([^"]+)"""".r)(algJsonStr).flatMap {

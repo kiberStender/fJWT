@@ -9,6 +9,15 @@ import io.github.kiberStender.fjwt.models.Claim
 
 object ClaimTasks:
   extension (claimJsonStr: String) {
+
+    /** A method to parse a given JSON formatted String to an instance of [[Claim[T]]]
+      * @tparam F
+      *   The effect type
+      * @tparam T
+      *   The time unit type used in the final [[Claim]] object
+      * @return
+      *   A [[Claim[T]]](as all fields are optional, no errors may arise)
+      */
     private[fjwt] def extractClaim[F[*]: [F[*]] =>> MonadError[F, Throwable]: [F[*]] =>> FromLong[
       F,
       T
@@ -27,6 +36,12 @@ object ClaimTasks:
   extension [T](claim: Claim[T]) {
     private def comma(prev: String): String = if (prev === "") "" else ","
 
+    /** A method to convert a given [[Claim[T]]] to a JSON formatted String
+      * @tparam F
+      *   The effect type
+      * @return
+      *   A JSON formatted String
+      */
     private[fjwt] def toJson[F[*]: [F[*]] =>> MonadError[F, Throwable]: [F[*]] =>> ToLong[F, T]]
         : F[String] =
       implicitly[ToLong[F, T]].toLong(claim).flatMap {

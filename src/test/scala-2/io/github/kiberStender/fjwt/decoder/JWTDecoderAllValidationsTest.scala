@@ -1,4 +1,6 @@
-package io.github.kiberStender.fjwt.decoder
+package io.github.kiberStender
+package fjwt
+package decoder
 
 import cats.syntax.all.{catsSyntaxApplicativeErrorId, catsSyntaxApplicativeId}
 import io.github.kiberStender.fjwt.exception.JWTError.{EmptyPrivateKeyError, EmptyTokenError, ExpiredTokenError, InvalidSignatureError, Not3TokenPartsError, NotMappedError, NullPrivateKeyError, NullTokenError}

@@ -1,4 +1,6 @@
-package io.github.kiberStender.fjwt.payload
+package io.github.kiberStender
+package fjwt
+package payload
 
 import cats.ApplicativeError
 import cats.syntax.all.{catsSyntaxApplicativeErrorId, catsSyntaxApplicativeId}

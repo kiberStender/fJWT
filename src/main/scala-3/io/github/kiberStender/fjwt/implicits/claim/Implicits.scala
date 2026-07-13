@@ -13,22 +13,38 @@ import java.time.{LocalDateTime, ZoneId}
 
 object Implicits:
   object LongInstances:
+    /** A convenience instance of [[ToLong]] that "converts" Long to Long
+      * @tparam F
+      *   The effect type
+      * @return
+      *   An instance of [[ToLong[F, Long]]]
+      */
     given toLong[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]: ToLong[F, Long] with
-      def toLong(
-          claim: Claim[Long]
-      ): F[Claim[Long]] = claim.pure[F]
+      def toLong(claim: Claim[Long]): F[Claim[Long]] = claim.pure[F]
 
+    /** A convenience instance of [[FromLong]] that "converts" Long to Long
+      * @tparam F
+      *   The effect type
+      * @return
+      *   An instance of [[FromLong[F, Long]]]
+      */
     given fromLong[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]: FromLong[F, Long] with
-      def fromLong(
-          claim: Claim[Long]
-      ): F[Claim[Long]] = claim.pure[F]
+      def fromLong(claim: Claim[Long]): F[Claim[Long]] = claim.pure[F]
 
+    /** An instance of [[Expirable]] check if a Claim[Long] is expired or still valid
+      *
+      * @param zoneId
+      *   The time zone of the user to properly convert the raw Long time type to a
+      *   [[LocalDateTime]]
+      * @tparam F
+      *   The effect type
+      * @return
+      *   An instance of [[Expirable[F, Long]]]
+      */
     given expirable[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]](using
         zoneId: ZoneId
     ): Expirable[F, Long] with
-      def isExpired(
-          claim: Claim[Long]
-      ): F[Boolean] =
+      def isExpired(claim: Claim[Long]): F[Boolean] =
         claim.exp
           .map {
             case exp if exp.toLocalDateTime isAfter LocalDateTime.now() => true.pure[F]
@@ -37,6 +53,15 @@ object Implicits:
           .getOrElse(false.pure[F])
 
   object LocalDateTimeInstances:
+    /** A convenience instance of [[ToLong]] that converts Long to [[LocalDateTime]]
+      * @param zoneId
+      *   The time zone of the user to properly convert the raw Long time type to a
+      *   [[LocalDateTime]]
+      * @tparam F
+      *   The effect type
+      * @return
+      *   An instance of [[ToLong[F, LocalDateTime]]]
+      */
     given toLong[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]](using
         zoneId: ZoneId
     ): ToLong[F, LocalDateTime] with
@@ -52,6 +77,15 @@ object Implicits:
         jti = claim.jti
       ).pure[F]
 
+    /** A convenience instance of [[FromLong]] that converts [[LocalDateTime]] to Long
+      * @param zoneId
+      *   The time zone of the user to properly convert the raw Long time type to a
+      *   [[LocalDateTime]]
+      * @tparam F
+      *   The effect type
+      * @return
+      *   An instance of [[FromLong[F, LocalDateTime]]]
+      */
     given fromLong[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]](using
         zoneId: ZoneId
     ): FromLong[F, LocalDateTime] with
@@ -67,6 +101,12 @@ object Implicits:
         jti = claim.jti
       ).pure[F]
 
+    /** An instance of [[Expirable]] check if a Claim[LocalDateTime] is expired or still valid
+      * @tparam F
+      *   The effect type
+      * @return
+      *   An instance of [[Expirable[F, LocalDateTime]]]
+      */
     given expirable[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]: Expirable[F, LocalDateTime]
       with
       def isExpired(
