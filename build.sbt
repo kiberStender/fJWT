@@ -1,7 +1,8 @@
 import xerial.sbt.Sonatype._
+import Dependencies.{io, *}
 
 ThisBuild / organization := "io.github.kiberStender"
-ThisBuild / description := "Simple Scala 3 JWT encoder/decoder written using Tagless final encoding"
+ThisBuild / description := "Simple Scala 2/3 JWT encoder/decoder written using Tagless final encoding"
 ThisBuild / homepage := Some(url("https://github.com/kiberStender/fJWT"))
 ThisBuild / scmInfo := Some(ScmInfo(url("https://github.com/kiberStender/fJWT"), "git@github.com:kiberStender/fJWT.git"))
 ThisBuild / developers := List(Developer(id = "1076952", name = "Kleber Eduardo Scalise Stender", email = "kleberstenderdev@gmail.com", url = url("https://github.com/kiberStender")))
@@ -44,4 +45,22 @@ lazy val root = (project in file("."))
   .settings(name := "fJWT")
   .settings(Common.settings: _*)
   .settings(libraryDependencies ++= Common.dependencies)
-  .enablePlugins(JavaAppPackaging)
+  .settings(
+    assembly / assemblyJarName := s"fjwt_${scalaBinaryVersion.value}-${version.value}.jar",
+    assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", "services", _ @ _*) => MergeStrategy.concat
+      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+      case x if x.endsWith("module-info.class") => MergeStrategy.discard
+      case _ => MergeStrategy.first
+    }
+  )
+  .settings(libraryDependencies ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, _)) =>
+        List(
+          compilerPlugin(org.typelevel.`kind-projector`),
+          compilerPlugin(com.olegpy.`better-monadic-for`)
+        )
+      case _                       => Nil
+    }
+  })
