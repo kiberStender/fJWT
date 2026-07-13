@@ -11,6 +11,12 @@ import org.apache.commons.codec.digest.HmacUtils
 
 object Implicits {
 
+  /** A convenience instance of [[Hmac]] implemented using Apache Commons Codec
+    * @tparam F
+    *   The effect type
+    * @return
+    *   The instance of [[Hmac[F]]]
+    */
   implicit def hmacEncoderApacheCommons[F[*]: ApplicativeError[*[_], Throwable]]: Hmac[F] =
     new Hmac[F] {
       def hash(hmac: HmacAlgorithm)(privateKey: String)(str: String): F[Array[Byte]] =

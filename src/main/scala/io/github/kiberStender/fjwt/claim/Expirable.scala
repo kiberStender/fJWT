@@ -1,18 +1,20 @@
-package io.github.kiberStender.fjwt.claim
+package io.github.kiberStender
+package fjwt
+package claim
 
 import io.github.kiberStender.fjwt.models.Claim
 
 /** A trait to manage how to calculate if a given token is expired or not
+  * @tparam F
+  *   The effect type
   * @tparam T
-  *   The type of the claim to be analyzed
+  *   The generic type representing a time unit
   */
 trait Expirable[F[*], T] {
 
   /** Method to check if a given claim is expired
     * @param claim
     *   The claim to be analyzed
-    * @tparam F
-    *   The effect type
     * @return
     *   True if the claim has an expiration date, and it's not yet reached or if
     *   it does not have an expiration date, false if it has no expiration date,

@@ -8,8 +8,18 @@ import cats.syntax.all.{catsSyntaxApplicativeId, toFlatMapOps, toFunctorOps}
 import io.github.kiberStender.fjwt.models.Claim
 
 object ClaimTasks {
-  private[fjwt] implicit class ClaimStringOps(claimJsonStr: String) {
-    def extractClaim[F[*]: MonadError[*[*], Throwable]: FromLong[*[*], T], T]: F[Claim[T]] = for {
+  implicit class ClaimStringOps(claimJsonStr: String) {
+
+    /** A method to parse a given JSON formatted String to an instance of [[Claim[T]]]
+      * @tparam F
+      *   The effect type
+      * @tparam T
+      *   The time unit type used in the final [[Claim]] object
+      * @return
+      *   A [[Claim[T]]](as all fields are optional, no errors may arise)
+      */
+    private[fjwt] def extractClaim[F[*]: MonadError[*[*], Throwable]: FromLong[*[*], T], T]
+        : F[Claim[T]] = for {
       iss <- extractField(""""iss"\s*:\s*"([^"]+)"""".r)(claimJsonStr)
       sub <- extractField(""""sub"\s*:\s*"([^"]+)"""".r)(claimJsonStr)
       aud <- extractField(""""aud"\s*:\s*"([^"]+)"""".r)(claimJsonStr)
@@ -21,10 +31,16 @@ object ClaimTasks {
     } yield claim
   }
 
-  private[fjwt] implicit class ClaimOps[T](claim: Claim[T]) {
+  implicit class ClaimOps[T](claim: Claim[T]) {
     private def comma(prev: String): String = if (prev === "") "" else ","
 
-    def toJson[F[*]: MonadError[*[*], Throwable]: ToLong[*[*], T]]: F[String] =
+    /** A method to convert a given [[Claim[T]]] to a JSON formatted String
+      * @tparam F
+      *   The effect type
+      * @return
+      *   A JSON formatted String
+      */
+    private[fjwt] def toJson[F[*]: MonadError[*[*], Throwable]: ToLong[*[*], T]]: F[String] =
       implicitly[ToLong[F, T]].toLong(claim).flatMap {
         case Claim(issOrig, subOrig, audOrig, expOrig, nbfOrig, iatOrig, jtiOrig) =>
           for {

@@ -3,7 +3,7 @@ package fjwt
 package decoder
 
 import cats.syntax.all.catsSyntaxApplicativeErrorId
-import io.github.kiberStender.fjwt.exception.JWTError.{EmptyPrivateKey, EmptyToken, ExpiredToken, InvalidSignature, Not3TokenParts, NotMappedError, NullPrivateKey, NullToken}
+import io.github.kiberStender.fjwt.exception.JWTError.{EmptyPrivateKeyError, EmptyTokenError, ExpiredTokenError, InvalidSignatureError, Not3TokenPartsError, NotMappedError, NullPrivateKeyError, NullTokenError}
 import io.github.kiberStender.fjwt.models.{Claim, JWToken}
 import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm
 import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm.HmacSHA512
@@ -48,7 +48,7 @@ class JWTDecoderUseHeaderAllValidationsTest extends AnyFlatSpecLike with GivenWh
 
   it must "fail to decode a JWT with less than 3 parts" in {
     // GIVEN
-    val expected = (Not3TokenParts: Throwable).raiseError[F, Token]
+    val expected = (Not3TokenPartsError: Throwable).raiseError[F, Token]
     val input =
       "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyLCJuYW1lIjoiSm9obiBEb2UiLCJhZG1pbiI6dHJ1ZX0"
 
@@ -62,7 +62,7 @@ class JWTDecoderUseHeaderAllValidationsTest extends AnyFlatSpecLike with GivenWh
 
   it must "fail to decode a JWT with an invalid signature" in {
     // GIVEN
-    val expected = (InvalidSignature: Throwable).raiseError[F, Token]
+    val expected = (InvalidSignatureError: Throwable).raiseError[F, Token]
     val input =
       "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0=.d92964cfa2a75550ae735c371a831e4eeb6c40b1734c28b565ab8fbc8a95b038d9e462c0b78a2c1b8fc00117bd0d7eabe92163b738be84e3181aeaede4f7bae"
 
@@ -89,7 +89,7 @@ class JWTDecoderUseHeaderAllValidationsTest extends AnyFlatSpecLike with GivenWh
   }
   it must "fail to decode when the the token is expired" in {
     // GIVEN
-    val expected = (ExpiredToken: Throwable).raiseError[F, Token]
+    val expected = (ExpiredTokenError: Throwable).raiseError[F, Token]
     val input =
       "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiZXhwIjoxNjYzNTE3NTUzMzQyLCJpYXQiOjE2NjM1MTgxNTMzNDIsIm5hbWUiOiJKb2huIERvZSIsImFkbWluIjp0cnVlfQ.sG7XxsrPelZf84vC2gjkuseS_q-4ukSkzTfrFhdV_vKXeusgL2xyXgGdTHHCZRXm_r7Me6JaxfttM9AgIzThcg"
 
@@ -103,7 +103,7 @@ class JWTDecoderUseHeaderAllValidationsTest extends AnyFlatSpecLike with GivenWh
 
   it must "fail to decode when the the private key is null" in {
     // GIVEN
-    val expected = (NullPrivateKey: Throwable).raiseError[F, Token]
+    val expected = (NullPrivateKeyError: Throwable).raiseError[F, Token]
     val key = null
     val input =
       "eyJhbGciOiJIbWFjU0hBNTEyIiwidHlwIjoiSldUIn0=.eyJpc3MiOm51bGwsInN1YiI6IjEyMzQ1Njc4OTAiLCJhdWQiOm51bGwsImV4cCI6bnVsbCwibmJmIjpudWxsLCJpYXQiOjE1MTYyMzkwMjIsImp0aSI6bnVsbCwicGF5bG9hZCI6eyJuYW1lIjoiSm9obiBEb2UiLCJhZG1pbiI6dHJ1ZX19.f74447e66ac8cac9319125a823911cd8aab49a21af719a43deb39707837f25edb9c64d83f1428e962476bf26c028a08b9073e1b15dc032d4e730e1089fd9f245"
@@ -118,7 +118,7 @@ class JWTDecoderUseHeaderAllValidationsTest extends AnyFlatSpecLike with GivenWh
 
   it must "fail to decode when the the private key is empty" in {
     // GIVEN
-    val expected = (EmptyPrivateKey: Throwable).raiseError[F, Token]
+    val expected = (EmptyPrivateKeyError: Throwable).raiseError[F, Token]
     val key = ""
     val input =
       "eyJhbGciOiJIbWFjU0hBNTEyIiwidHlwIjoiSldUIn0=.eyJpc3MiOm51bGwsInN1YiI6IjEyMzQ1Njc4OTAiLCJhdWQiOm51bGwsImV4cCI6bnVsbCwibmJmIjpudWxsLCJpYXQiOjE1MTYyMzkwMjIsImp0aSI6bnVsbCwicGF5bG9hZCI6eyJuYW1lIjoiSm9obiBEb2UiLCJhZG1pbiI6dHJ1ZX19.f74447e66ac8cac9319125a823911cd8aab49a21af719a43deb39707837f25edb9c64d83f1428e962476bf26c028a08b9073e1b15dc032d4e730e1089fd9f245"
@@ -133,7 +133,7 @@ class JWTDecoderUseHeaderAllValidationsTest extends AnyFlatSpecLike with GivenWh
 
   it must "fail to decode when the token is null" in {
     // GIVEN
-    val expected = (NullToken: Throwable).raiseError[F, Token]
+    val expected = (NullTokenError: Throwable).raiseError[F, Token]
     val input = null
 
     // WHEN
@@ -146,7 +146,7 @@ class JWTDecoderUseHeaderAllValidationsTest extends AnyFlatSpecLike with GivenWh
 
   it must "fail to decode when the token is empty" in {
     // GIVEN
-    val expected = (EmptyToken: Throwable).raiseError[F, Token]
+    val expected = (EmptyTokenError: Throwable).raiseError[F, Token]
     val input = ""
 
     // WHEN

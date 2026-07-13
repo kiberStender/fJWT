@@ -11,6 +11,12 @@ import org.apache.commons.codec.binary.Base64
 
 object Implicits {
 
+  /** A [[Base64Encoder]] instance implemented with Apache Common Codec library
+    * @tparam F
+    *   The effect tupe
+    * @return
+    *   An instance of [[Base64Encoder]]
+    */
   implicit def apacheCommonEncoder[F[*]: Applicative]: Base64Encoder[F] = new Base64Encoder[F] {
     def encode(data: Array[Byte]): F[String] = (Base64 encodeBase64String data).pure[F]
 
@@ -18,6 +24,12 @@ object Implicits {
       (Base64 encodeBase64URLSafeString data).pure[F]
   }
 
+  /** A [[Base64Decoder]] instance implemented with Apache Common Codec library
+    * @tparam F
+    *   The effect type
+    * @return
+    *   An instance of [[Base64Decoder]]
+    */
   implicit def apacheCommonDecoder[F[*]: ApplicativeError[*[_], Throwable]]: Base64Decoder[F] =
     (str: String) =>
       try {

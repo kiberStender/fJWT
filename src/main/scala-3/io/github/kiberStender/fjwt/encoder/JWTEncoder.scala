@@ -8,7 +8,7 @@ import io.github.kiberStender.fjwt.claim.ClaimTasks.*
 import io.github.kiberStender.fjwt.claim.ToLong
 import io.github.kiberStender.fjwt.crypto.base64.Base64Encoder
 import io.github.kiberStender.fjwt.crypto.hmac.Hmac
-import io.github.kiberStender.fjwt.exception.JWTError.{EmptyPrivateKey, NullPrivateKey}
+import io.github.kiberStender.fjwt.exception.JWTError.{EmptyPrivateKeyError, NullPrivateKeyError}
 import io.github.kiberStender.fjwt.json.JsonEncoder
 import io.github.kiberStender.fjwt.models.Claim
 import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm
@@ -45,7 +45,7 @@ object JWTEncoder:
   ): JWTEncoder[F, T, P] =
     new JWTEncoder[F, T, P]:
       def encode(privateKey: String)(claim: Claim[T])(payload: P): F[String] = for
-        key <- privateKey.isEmptyValue(NullPrivateKey)(EmptyPrivateKey)
+        key <- privateKey.isEmptyValue(NullPrivateKeyError)(EmptyPrivateKeyError)
         headerStr <- s"""{"alg":"${hmacAlg.alg}","typ":"JWT"}""".pure[F]
         encodedHeader <- implicitly[Base64Encoder[F]].encodeURLSafe(headerStr)
         claimStr <- claim.toJson[F]

@@ -6,7 +6,7 @@ package claim
 import cats.ApplicativeError
 import cats.syntax.all.{catsSyntaxApplicativeErrorId, catsSyntaxApplicativeId}
 import io.github.kiberStender.fjwt.claim.{Expirable, FromLong, ToLong}
-import io.github.kiberStender.fjwt.exception.JWTError.ExpiredToken
+import io.github.kiberStender.fjwt.exception.JWTError.ExpiredTokenError
 import io.github.kiberStender.fjwt.models.Claim
 
 import java.time.{LocalDateTime, ZoneId}
@@ -32,7 +32,7 @@ object Implicits:
         claim.exp
           .map {
             case exp if exp.toLocalDateTime isAfter LocalDateTime.now() => true.pure[F]
-            case _ => ExpiredToken.raiseError[F, Boolean]
+            case _ => ExpiredTokenError.raiseError[F, Boolean]
           }
           .getOrElse(false.pure[F])
 
@@ -74,6 +74,6 @@ object Implicits:
       ): F[Boolean] = claim.exp
         .map {
           case exp if exp isAfter LocalDateTime.now() => true.pure[F]
-          case _                                      => ExpiredToken.raiseError[F, Boolean]
+          case _                                      => ExpiredTokenError.raiseError[F, Boolean]
         }
         .getOrElse(false.pure[F])

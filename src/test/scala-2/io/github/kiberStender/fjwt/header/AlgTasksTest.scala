@@ -2,7 +2,7 @@ package io.github.kiberStender.fjwt.header
 
 import cats.implicits.catsSyntaxApplicativeErrorId
 import cats.syntax.all.catsSyntaxApplicativeId
-import io.github.kiberStender.fjwt.exception.JWTError.InvalidAlgException
+import io.github.kiberStender.fjwt.exception.JWTError.InvalidAlgError
 import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm
 import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm.{HmacSHA1, HmacSHA512}
 import org.scalatest._
@@ -41,7 +41,7 @@ class AlgTasksTest extends AnyFlatSpecLike with should.Matchers with GivenWhenTh
     type F[T] = Either[Throwable, T]
     Given("""{"alg":"HS381","typ":"JWT"}""")
     val headerJson = """{"alg":"HS381","typ":"JWT"}"""
-    val expected: F[HmacAlgorithm] = InvalidAlgException("HS381").raiseError[F, HmacAlgorithm]
+    val expected: F[HmacAlgorithm] = InvalidAlgError("HS381").raiseError[F, HmacAlgorithm]
 
     When("extracting the alg value")
     val actual = headerJson.extractAlg[F]
@@ -54,7 +54,7 @@ class AlgTasksTest extends AnyFlatSpecLike with should.Matchers with GivenWhenTh
     type F[T] = Either[Throwable, T]
     Given("""{"typ":"JWT"}""")
     val headerJson = """{"typ":"JWT"}"""
-    val expected: F[HmacAlgorithm] = InvalidAlgException("Empty value").raiseError[F, HmacAlgorithm]
+    val expected: F[HmacAlgorithm] = InvalidAlgError("Empty value").raiseError[F, HmacAlgorithm]
 
     When("extracting the alg value")
     val actual = headerJson.extractAlg[F]

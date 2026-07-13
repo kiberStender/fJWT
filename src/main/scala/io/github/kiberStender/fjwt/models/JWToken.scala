@@ -14,8 +14,8 @@ import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm
   *   is going to expire
   * @param payload
   *   The data the user wanted to transmit
-  * @tparam C
-  *   The type of the claim
+  * @tparam T
+  *   The type of the time unit used in the claim instance
   * @tparam P
   *   The type of the payload
   */

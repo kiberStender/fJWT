@@ -9,9 +9,9 @@ import cats.syntax.all.{
 }
 import io.github.kiberStender.fjwt.crypto.hmac.Hmac
 import io.github.kiberStender.fjwt.exception.JWTError.{
-  InvalidSignature,
-  Not2TokenParts,
-  Not3TokenParts
+  InvalidSignatureError,
+  Not2TokenPartsError,
+  Not3TokenPartsError
 }
 import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm
 
@@ -49,18 +49,18 @@ package object fjwt:
         : F[(String, String)] =
       str split "\\." match
         case Array(header, payload, _*) => (header, payload).pure[F]
-        case _                          => Not2TokenParts.raiseError[F, (String, String)]
+        case _                          => Not2TokenPartsError.raiseError[F, (String, String)]
 
     private[fjwt] def is3Parts[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]
         : F[(String, String, String)] =
       str split "\\." match
         case Array(header, payload, signature, _*) => (header, payload, signature).pure[F]
-        case _ => Not3TokenParts.raiseError[F, (String, String, String)]
+        case _ => Not3TokenPartsError.raiseError[F, (String, String, String)]
 
     private[fjwt] def isValidSignature[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]](
         originalSignature: String
     ): F[Boolean] =
-      if str === originalSignature then true.pure[F] else InvalidSignature.raiseError[F, Boolean]
+      if str === originalSignature then true.pure[F] else InvalidSignatureError.raiseError[F, Boolean]
   }
 
   extension (n: Long) {

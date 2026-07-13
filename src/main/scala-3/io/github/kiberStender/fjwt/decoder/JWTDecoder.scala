@@ -9,10 +9,10 @@ import io.github.kiberStender.fjwt.claim.{Expirable, FromLong}
 import io.github.kiberStender.fjwt.crypto.base64.{Base64Decoder, Base64Encoder}
 import io.github.kiberStender.fjwt.crypto.hmac.Hmac
 import io.github.kiberStender.fjwt.exception.JWTError.{
-  EmptyPrivateKey,
-  EmptyToken,
-  NullPrivateKey,
-  NullToken
+  EmptyPrivateKeyError,
+  EmptyTokenError,
+  NullPrivateKeyError,
+  NullTokenError
 }
 import io.github.kiberStender.fjwt.header.AlgTasks.*
 import io.github.kiberStender.fjwt.json.JsonDecoder
@@ -95,8 +95,8 @@ object JWTDecoder:
     new JWTDecoder[F, T, P]:
       def decode(privateKey: String)(accessToken: String): F[JWToken[T, P]] =
         for
-          key <- privateKey.isEmptyValue(NullPrivateKey)(EmptyPrivateKey)
-          token <- accessToken.isEmptyValue(NullToken)(EmptyToken)
+          key <- privateKey.isEmptyValue(NullPrivateKeyError)(EmptyPrivateKeyError)
+          token <- accessToken.isEmptyValue(NullTokenError)(EmptyTokenError)
           (encodedHeaderStr, encodedPayloadStr, origSignature) <- token.is3Parts
           decodedHeaderStr <- implicitly[Base64Decoder[F]] decode encodedHeaderStr
           header <- decodedHeaderStr.extractAlg[F]
@@ -138,8 +138,8 @@ object JWTDecoder:
     new JWTDecoder[F, T, P]:
       def decode(privateKey: String)(accessToken: String): F[JWToken[T, P]] =
         for
-          key <- privateKey.isEmptyValue(NullPrivateKey)(EmptyPrivateKey)
-          token <- accessToken.isEmptyValue(NullToken)(EmptyToken)
+          key <- privateKey.isEmptyValue(NullPrivateKeyError)(EmptyPrivateKeyError)
+          token <- accessToken.isEmptyValue(NullTokenError)(EmptyTokenError)
           (encodedHeaderStr, encodedPayloadStr, origSignature) <- token.is3Parts
           decodedHeader <- implicitly[Base64Decoder[F]] decode encodedHeaderStr
           bodyToValidate = s"$encodedHeaderStr.$encodedPayloadStr"
@@ -173,8 +173,8 @@ object JWTDecoder:
   ]] =>> JsonDecoder[F, P], T, P]: JWTDecoder[F, T, P] =
     new JWTDecoder[F, T, P]:
       def decode(privateKey: String)(accessToken: String): F[JWToken[T, P]] = for
-        key <- privateKey.isEmptyValue(NullPrivateKey)(EmptyPrivateKey)
-        token <- accessToken.isEmptyValue(NullToken)(EmptyToken)
+        key <- privateKey.isEmptyValue(NullPrivateKeyError)(EmptyPrivateKeyError)
+        token <- accessToken.isEmptyValue(NullTokenError)(EmptyTokenError)
         (encodedHeaderStr, encodedPayloadStr, origSignature) <- token.is3Parts
         decodedHeaderStr <- implicitly[Base64Decoder[F]] decode encodedHeaderStr
         header <- decodedHeaderStr.extractAlg[F]
@@ -217,8 +217,8 @@ object JWTDecoder:
     new JWTDecoder[F, T, P]:
       def decode(privateKey: String)(accessToken: String): F[JWToken[T, P]] =
         for
-          key <- privateKey.isEmptyValue(NullPrivateKey)(EmptyPrivateKey)
-          token <- accessToken.isEmptyValue(NullToken)(EmptyToken)
+          key <- privateKey.isEmptyValue(NullPrivateKeyError)(EmptyPrivateKeyError)
+          token <- accessToken.isEmptyValue(NullTokenError)(EmptyTokenError)
           (encodedHeaderStr, encodedPayloadStr, origSignature) <- token.is3Parts
           bodyToValidate = s"$encodedHeaderStr.$encodedPayloadStr"
           byteSig <- encodeAlg.hash(key)(bodyToValidate)
