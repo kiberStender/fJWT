@@ -23,7 +23,7 @@ class JWTDecoderNoExpirationValidationTest extends AnyFlatSpecLike with GivenWhe
   import io.github.kiberStender.fjwt.implicits.base64.Implicits.apacheCommonDecoder
   import io.github.kiberStender.fjwt.implicits.header.Implicits.hmacEncoderApacheCommons
 
-  private lazy val decoder: JWTDecoder[F, Long, Payload] = JWTDecoder.noExpirationValidation(encodeAlg)
+  private lazy val decoder: JWTDecoder[F, Long, Payload] = NoExpirationValidation.dsl(encodeAlg)
 
   private val key = "super-secret-key-sixty-four-characters-long-to-satisfy-test-please"
 

@@ -18,7 +18,7 @@ class JWTDecoderNoValidationTest extends AnyFlatSpecLike with GivenWhenThen:
 
   private type Token = JWToken[Long, Payload]
 
-  private lazy val decoder: JWTDecoder[F, Long, Payload] = JWTDecoder.noValidation
+  private lazy val decoder: JWTDecoder[F, Long, Payload] = NoValidation.dsl
 
   private val key = "super-secret-key-sixty-four-characters-long-to-satisfy-test-please"
 

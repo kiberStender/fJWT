@@ -25,7 +25,7 @@ class JWTDecoderAllValidationsTest extends AnyFlatSpecLike with GivenWhenThen:
 
   private lazy val encodeAlg: HmacAlgorithm = HmacSHA512
 
-  private lazy val decoder: JWTDecoder[F, Long, Payload] = JWTDecoder.allValidations(encodeAlg)
+  private lazy val decoder: JWTDecoder[F, Long, Payload] = AllValidations.dsl(encodeAlg)
 
   private val key = "super-secret-key-sixty-four-characters-long-to-satisfy-test-please"
 

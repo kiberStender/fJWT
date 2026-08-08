@@ -25,7 +25,7 @@ class JWTDecoderUseHeaderAllValidationsTest extends AnyFlatSpecLike with GivenWh
 
   private lazy val encodeAlg: HmacAlgorithm = HmacSHA512
 
-  private lazy val decoder: JWTDecoder[F, Long, Payload] = JWTDecoder.useHeaderAllValidations
+  private lazy val decoder: JWTDecoder[F, Long, Payload] = UseHeaderAllValidations.dsl
 
   private val key = "super-secret-key-sixty-four-characters-long-to-satisfy-test-please"
 
