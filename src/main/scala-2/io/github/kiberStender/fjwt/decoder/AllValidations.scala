@@ -8,11 +8,11 @@ import io.github.kiberStender.fjwt.claim.ClaimTasks.ClaimStringOps
 import io.github.kiberStender.fjwt.claim.{Expirable, FromLong}
 import io.github.kiberStender.fjwt.crypto.base64.{Base64Decoder, Base64Encoder}
 import io.github.kiberStender.fjwt.crypto.hmac.Hmac
-import io.github.kiberStender.fjwt.exception.JWTError.{
-  EmptyPrivateKeyError,
-  EmptyTokenError,
-  NullPrivateKeyError,
-  NullTokenError
+import io.github.kiberStender.fjwt.exception.JWTException.{
+  EmptyPrivateKeyException,
+  EmptyTokenException,
+  NullPrivateKeyException,
+  NullTokenException
 }
 import io.github.kiberStender.fjwt.json.JsonDecoder
 import io.github.kiberStender.fjwt.models.JWToken
@@ -47,9 +47,9 @@ object AllValidations {
     new JWTDecoder[F, T, P] {
       def decode(privateKey: String)(accessToken: String): F[JWToken[T, P]] =
         for {
-          key <- privateKey.isEmptyValue(NullPrivateKeyError)(EmptyPrivateKeyError)
-          token <- accessToken.isEmptyValue(NullTokenError)(EmptyTokenError)
-          (encodedHeaderStr, encodedPayloadStr, origSignature) <- token.is3Parts
+          key <- privateKey.isEmptyValue(NullPrivateKeyException)(EmptyPrivateKeyException)
+          token <- accessToken.isEmptyValue(NullTokenException)(EmptyTokenException)
+          (encodedHeaderStr, encodedPayloadStr, origSignature) <- token.is3Parts[F]
           bodyToValidate = s"$encodedHeaderStr.$encodedPayloadStr"
           byteSig <- encodeAlg.hash(key)(bodyToValidate)
           calculatedSig <- implicitly[Base64Encoder[F]] encodeURLSafe byteSig

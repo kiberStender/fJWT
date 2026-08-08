@@ -3,7 +3,7 @@ package fjwt
 package decoder
 
 import cats.syntax.all.{catsSyntaxApplicativeErrorId, catsSyntaxApplicativeId}
-import io.github.kiberStender.fjwt.exception.JWTError.Not2TokenPartsError
+import io.github.kiberStender.fjwt.exception.JWTException.Not2TokenPartsException
 import io.github.kiberStender.fjwt.implicits.claim.Implicits.LongInstances.fromLong
 import io.github.kiberStender.fjwt.implicits.base64.Implicits.apacheCommonDecoder
 import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm.HmacSHA512
@@ -56,7 +56,7 @@ class JWTDecoderNoValidationTest extends AnyFlatSpecLike with GivenWhenThen {
 
   it must "fail to decode a token with less than 2 parts" in {
     // GIVEN
-    val expected: F[Token] = (Not2TokenPartsError: Throwable).raiseError[F, Token]
+    val expected: F[Token] = (Not2TokenPartsException: Throwable).raiseError[F, Token]
     val input =
       "eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyLCJuYW1lIjoiSm9obiBEb2UiLCJhZG1pbiI6dHJ1ZX0"
 

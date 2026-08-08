@@ -2,7 +2,7 @@ package io.github.kiberStender
 package fjwt
 
 import cats.syntax.all.{catsSyntaxApplicativeErrorId, catsSyntaxApplicativeId}
-import io.github.kiberStender.fjwt.exception.JWTError.{Not2TokenPartsError, Not3TokenPartsError}
+import io.github.kiberStender.fjwt.exception.JWTException.{Not2TokenPartsException, Not3TokenPartsException}
 import org.scalatest._
 import flatspec._
 import matchers._
@@ -82,7 +82,7 @@ class packageTest extends AnyFlatSpecLike with should.Matchers with GivenWhenThe
 
     Given("the token abcdabcdef")
     val token = "abcdabcdef"
-    val expected = (Not2TokenPartsError: Throwable).raiseError[F, (String, String)]
+    val expected = (Not2TokenPartsException: Throwable).raiseError[F, (String, String)]
 
     When("checking if it has at least 2 parts")
     val actual = token.is2Parts[F]
@@ -127,7 +127,7 @@ class packageTest extends AnyFlatSpecLike with should.Matchers with GivenWhenThe
 
     Given("the token abcdabcdef")
     val token = "abcdabcdef"
-    val expected = (Not3TokenPartsError: Throwable).raiseError[F, (String, String, String)]
+    val expected = (Not3TokenPartsException: Throwable).raiseError[F, (String, String, String)]
 
     When("checking if it has at least 3 parts")
     val actual = token.is3Parts[F]
@@ -142,7 +142,7 @@ class packageTest extends AnyFlatSpecLike with should.Matchers with GivenWhenThe
 
     Given("the token abcd.abcdef")
     val token = "abcd.abcdef"
-    val expected = (Not3TokenPartsError: Throwable).raiseError[F, (String, String, String)]
+    val expected = (Not3TokenPartsException: Throwable).raiseError[F, (String, String, String)]
 
     When("checking if it has at least 3 parts")
     val actual = token.is3Parts[F]

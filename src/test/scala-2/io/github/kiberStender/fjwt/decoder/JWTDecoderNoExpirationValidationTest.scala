@@ -3,7 +3,7 @@ package fjwt
 package decoder
 
 import cats.syntax.all.catsSyntaxApplicativeErrorId
-import io.github.kiberStender.fjwt.exception.JWTError.{EmptyPrivateKeyError, EmptyTokenError, InvalidSignatureError, Not3TokenPartsError, NullPrivateKeyError, NullTokenError}
+import io.github.kiberStender.fjwt.exception.JWTException.{EmptyPrivateKeyException, EmptyTokenException, InvalidSignatureException, Not3TokenPartsException, NullPrivateKeyException, NullTokenException}
 import io.github.kiberStender.fjwt.models.{Claim, JWToken}
 import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm
 import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm.HmacSHA512
@@ -47,7 +47,7 @@ class JWTDecoderNoExpirationValidationTest extends AnyFlatSpecLike with GivenWhe
 
   it must "fail to decode a token with the wrong signature" in {
     // GIVEN
-    val expected: F[Token] = (InvalidSignatureError : Throwable).raiseError[F, Token]
+    val expected: F[Token] = (InvalidSignatureException : Throwable).raiseError[F, Token]
     val input =
       "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyLCJuYW1lIjoiSm9obiBEb2UiLCJhZG1pbiI6dHJ1ZX0.aknjhsdfhkjdsfjdfsajhdsfkj"
 
@@ -60,7 +60,7 @@ class JWTDecoderNoExpirationValidationTest extends AnyFlatSpecLike with GivenWhe
 
   it must "fail to decode a token with less than 3 parts" in {
     // GIVEN
-    val expected: F[Token] = (Not3TokenPartsError : Throwable).raiseError[F, Token]
+    val expected: F[Token] = (Not3TokenPartsException : Throwable).raiseError[F, Token]
     val input =
       "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyLCJuYW1lIjoiSm9obiBEb2UiLCJhZG1pbiI6dHJ1ZX0"
 
@@ -73,7 +73,7 @@ class JWTDecoderNoExpirationValidationTest extends AnyFlatSpecLike with GivenWhe
 
   it must "fail to decode a token with less than 2 parts" in {
     // GIVEN
-    val expected: F[Token] = (Not3TokenPartsError : Throwable).raiseError[F, Token]
+    val expected: F[Token] = (Not3TokenPartsException : Throwable).raiseError[F, Token]
     val input =
       "eyJzdWIiOiIxMjM0NTY3ODkwIiwiaWF0IjoxNTE2MjM5MDIyLCJuYW1lIjoiSm9obiBEb2UiLCJhZG1pbiI6dHJ1ZX0"
 
@@ -86,7 +86,7 @@ class JWTDecoderNoExpirationValidationTest extends AnyFlatSpecLike with GivenWhe
 
   it must "fail to decode when the the private key is null" in {
     // GIVEN
-    val expected: F[Token] = (NullPrivateKeyError : Throwable).raiseError[F, Token]
+    val expected: F[Token] = (NullPrivateKeyException : Throwable).raiseError[F, Token]
     val key: Null = null
     val input =
       "eyJhbGciOiJIbWFjU0hBNTEyIiwidHlwIjoiSldUIn0=.eyJpc3MiOm51bGwsInN1YiI6IjEyMzQ1Njc4OTAiLCJhdWQiOm51bGwsImV4cCI6bnVsbCwibmJmIjpudWxsLCJpYXQiOjE1MTYyMzkwMjIsImp0aSI6bnVsbCwicGF5bG9hZCI6eyJuYW1lIjoiSm9obiBEb2UiLCJhZG1pbiI6dHJ1ZX19.f74447e66ac8cac9319125a823911cd8aab49a21af719a43deb39707837f25edb9c64d83f1428e962476bf26c028a08b9073e1b15dc032d4e730e1089fd9f245"
@@ -101,7 +101,7 @@ class JWTDecoderNoExpirationValidationTest extends AnyFlatSpecLike with GivenWhe
 
   it must "fail to decode when the the private key is empty" in {
     // GIVEN
-    val expected: F[Token] = (EmptyPrivateKeyError : Throwable).raiseError[F, Token]
+    val expected: F[Token] = (EmptyPrivateKeyException : Throwable).raiseError[F, Token]
     val key = ""
     val input =
       "eyJhbGciOiJIbWFjU0hBNTEyIiwidHlwIjoiSldUIn0=.eyJpc3MiOm51bGwsInN1YiI6IjEyMzQ1Njc4OTAiLCJhdWQiOm51bGwsImV4cCI6bnVsbCwibmJmIjpudWxsLCJpYXQiOjE1MTYyMzkwMjIsImp0aSI6bnVsbCwicGF5bG9hZCI6eyJuYW1lIjoiSm9obiBEb2UiLCJhZG1pbiI6dHJ1ZX19.f74447e66ac8cac9319125a823911cd8aab49a21af719a43deb39707837f25edb9c64d83f1428e962476bf26c028a08b9073e1b15dc032d4e730e1089fd9f245"
@@ -116,7 +116,7 @@ class JWTDecoderNoExpirationValidationTest extends AnyFlatSpecLike with GivenWhe
 
   it must "fail to decode when the token is null" in {
     // GIVEN
-    val expected: F[Token] = (NullTokenError : Throwable).raiseError[F, Token]
+    val expected: F[Token] = (NullTokenException : Throwable).raiseError[F, Token]
     val input: Null = null
 
     // WHEN
@@ -129,7 +129,7 @@ class JWTDecoderNoExpirationValidationTest extends AnyFlatSpecLike with GivenWhe
 
   it must "fail to decode when the token is empty" in {
     // GIVEN
-    val expected: F[Payload] = (EmptyTokenError : Throwable).raiseError[F, Payload]
+    val expected: F[Payload] = (EmptyTokenException : Throwable).raiseError[F, Payload]
     val input = ""
 
     // WHEN

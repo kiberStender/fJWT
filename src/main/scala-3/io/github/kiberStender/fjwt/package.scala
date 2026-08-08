@@ -8,10 +8,10 @@ import cats.syntax.all.{
   toFunctorOps
 }
 import io.github.kiberStender.fjwt.crypto.hmac.Hmac
-import io.github.kiberStender.fjwt.exception.JWTError.{
-  InvalidSignatureError,
-  Not2TokenPartsError,
-  Not3TokenPartsError
+import io.github.kiberStender.fjwt.exception.JWTException.{
+  InvalidSignatureException,
+  Not2TokenPartsException,
+  Not3TokenPartsException
 }
 import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm
 
@@ -83,25 +83,25 @@ package object fjwt:
       * @tparam F
       *   The effect type
       * @return
-      *   Either a Tuple2 containing each part or [[Not2TokenPartsError]]
+      *   Either a Tuple2 containing each part or [[Not2TokenPartsException]]
       */
     private[fjwt] def is2Parts[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]
         : F[(String, String)] =
       str split "\\." match
         case Array(header, payload, _*) => (header, payload).pure[F]
-        case _                          => Not2TokenPartsError.raiseError[F, (String, String)]
+        case _                          => Not2TokenPartsException.raiseError[F, (String, String)]
 
     /** A helper method to check if a given token has At Least three(3) parts eg: abcd.ab.cd
       * @tparam F
       *   The effect type
       * @return
-      *   Either a Tuple3 containing each part or [[Not3TokenPartsError]]
+      *   Either a Tuple3 containing each part or [[Not3TokenPartsException]]
       */
     private[fjwt] def is3Parts[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]
         : F[(String, String, String)] =
       str split "\\." match
         case Array(header, payload, signature, _*) => (header, payload, signature).pure[F]
-        case _ => Not3TokenPartsError.raiseError[F, (String, String, String)]
+        case _ => Not3TokenPartsException.raiseError[F, (String, String, String)]
 
     /** A helper method to check if a given signature(the third part of the JWT) is valid
       * @param originalSignature
@@ -109,13 +109,13 @@ package object fjwt:
       * @tparam F
       *   The effect type
       * @return
-      *   Either True or [[InvalidSignatureError]]
+      *   Either True or [[InvalidSignatureException]]
       */
     private[fjwt] def isValidSignature[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]](
         originalSignature: String
     ): F[Boolean] =
       if str === originalSignature then true.pure[F]
-      else InvalidSignatureError.raiseError[F, Boolean]
+      else InvalidSignatureException.raiseError[F, Boolean]
   }
 
   extension (n: Long) {
