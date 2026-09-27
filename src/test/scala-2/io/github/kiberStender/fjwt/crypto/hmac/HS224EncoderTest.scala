@@ -3,15 +3,16 @@ package fjwt
 package crypto
 package hmac
 
-import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm
-import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm.HmacSHA224
 import org.scalatest._
 import flatspec._
+import io.github.kiberStender.fjwt.models.Header
 import matchers._
 
 class HS224EncoderTest extends AnyFlatSpecLike with should.Matchers with GivenWhenThen {
   private type F[T] = Either[Throwable, T]
-  private lazy val encoder: HmacAlgorithm = HmacSHA224
+  private val header: Header = new Header {
+    val alg: String = "HS224"
+  }
 
   import io.github.kiberStender.fjwt.implicits.header.Implicits.hmacEncoderApacheCommons
 
@@ -25,7 +26,7 @@ class HS224EncoderTest extends AnyFlatSpecLike with should.Matchers with GivenWh
     )
 
     // WHEN
-    val actual: F[Array[Byte]] = encoder.hash[F](key)(input)
+    val actual: F[Array[Byte]] = implicitly[Hmac[F]].hash(header)(key)(input)
 
     // THEN
     actual.map(value => value should be(expected))

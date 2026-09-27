@@ -3,117 +3,87 @@ package fjwt
 package implicits
 package claim
 
-import cats.ApplicativeError
+import cats.{Applicative, ApplicativeError}
 import cats.syntax.all.{catsSyntaxApplicativeErrorId, catsSyntaxApplicativeId}
-import io.github.kiberStender.fjwt.claim.{Expirable, FromLong, ToLong}
-import io.github.kiberStender.fjwt.exception.JWTError.ExpiredTokenError
+import io.github.kiberStender.fjwt.claim.Expirable
+import io.github.kiberStender.fjwt.convert.To
+import io.github.kiberStender.fjwt.exception.JWTException.ExpiredTokenException
 import io.github.kiberStender.fjwt.models.Claim
 
 import java.time.{LocalDateTime, ZoneId}
 
+/** A utility container object providing standard out-of-the-box typeclass instances for time
+  * conversion (`To`) and lifecycle expiration checks (`Expirable`) across different time
+  * representations (such as `Long` epoch values and `java.time.LocalDateTime`).
+  */
 object Implicits:
+  /** Provides typeclass instances for handling claims where time is represented as raw epoch `Long`
+    * timestamps.
+    */
   object LongInstances:
-    /** A convenience instance of [[ToLong]] that "converts" Long to Long
-      * @tparam F
-      *   The effect type
-      * @return
-      *   An instance of [[ToLong[F, Long]]]
-      */
-    given toLong[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]: ToLong[F, Long] with
-      def toLong(claim: Claim[Long]): F[Claim[Long]] = claim.pure[F]
-
-    /** A convenience instance of [[FromLong]] that "converts" Long to Long
-      * @tparam F
-      *   The effect type
-      * @return
-      *   An instance of [[FromLong[F, Long]]]
-      */
-    given fromLong[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]: FromLong[F, Long] with
-      def fromLong(claim: Claim[Long]): F[Claim[Long]] = claim.pure[F]
-
-    /** An instance of [[Expirable]] check if a Claim[Long] is expired or still valid
+    /** Provides an identity conversion instance for `To[F, C[Long], C[Long]]`.
       *
-      * @param zoneId
-      *   The time zone of the user to properly convert the raw Long time type to a
-      *   [[LocalDateTime]]
+      * Since the time representation in the claim is already a `Long` (matching the raw JSON
+      * numeric format), this converter acts as a no-op that lifts the claim directly into the
+      * effect type `F`.
+      *
       * @tparam F
-      *   The effect type
+      *   The effect type constructor, which must have an instance of `cats.Applicative`.
+      * @tparam C
+      *   The higher-kinded type representing the JWT Claim, bounded by [[Claim]].
       * @return
-      *   An instance of [[Expirable[F, Long]]]
+      *   An instance of `To[F, C[Long], C[Long]]`.
       */
-    given expirable[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]](using
-        zoneId: ZoneId
-    ): Expirable[F, Long] with
-      def isExpired(claim: Claim[Long]): F[Boolean] =
-        claim.exp
-          .map {
-            case exp if exp.toLocalDateTime isAfter LocalDateTime.now() => true.pure[F]
-            case _ => ExpiredTokenError.raiseError[F, Boolean]
-          }
-          .getOrElse(false.pure[F])
+    given fromLongToLong[F[*]: Applicative, C[X] <: Claim[X]]: To[F, C[Long], C[Long]] with
+      def convert(claim: C[Long]): F[C[Long]] = claim.pure[F]
 
+    /** Provides an `Expirable` typeclass instance for claims containing `Long` epoch timestamps.
+      *
+      * This implementation inspects the `exp` field of the claim. If an expiration timestamp is
+      * present, it converts it to a `LocalDateTime` using the implicit `ZoneId` in scope and checks
+      * whether it is before the current local time (`LocalDateTime.now()`). If it has expired, it
+      * raises an [[JWTException.ExpiredTokenException]] suspended in the effect `F`; otherwise, it
+      * returns the validated claim suspended in `F`.
+      *
+      * @tparam F
+      *   The effect type constructor, requiring `cats.ApplicativeError[F, Throwable]`.
+      * @tparam C
+      *   The higher-kinded type representing the JWT Claim, bounded by [[Claim]].
+      * @param zoneId
+      *   The implicit time zone required to convert epoch time to local date-time.
+      * @return
+      *   An instance of `Expirable[F, Long, C]`.
+      */
+    given expirable[F[*]: [F[*]] =>> ApplicativeError[F, Throwable], C[X] <: Claim[X]](using
+        zoneId: ZoneId
+    ): Expirable[F, Long, C] with
+      def isExpired(claim: C[Long]): F[C[Long]] = claim.exp match
+        case Some(exp) if exp.toLocalDateTime isBefore LocalDateTime.now() =>
+          ExpiredTokenException.raiseError[F, C[Long]]
+        case _ => claim.pure[F]
+
+  /** Provides typeclass instances for handling claims where time is represented natively as
+    * `java.time.LocalDateTime`.
+    */
   object LocalDateTimeInstances:
-    /** A convenience instance of [[ToLong]] that converts Long to [[LocalDateTime]]
-      * @param zoneId
-      *   The time zone of the user to properly convert the raw Long time type to a
-      *   [[LocalDateTime]]
+    /** Provides an `Expirable` typeclass instance for claims containing `java.time.LocalDateTime`
+      * expiration times.
+      *
+      * This implementation inspects the `exp` field of the claim. If an expiration date-time is
+      * present and is before the current local time (`LocalDateTime.now()`), it raises an
+      * [[JWTException.ExpiredTokenException]] suspended in the effect `F`. Otherwise, it returns
+      * the validated claim suspended in `F`.
+      *
       * @tparam F
-      *   The effect type
+      *   The effect type constructor, requiring `cats.ApplicativeError[F, Throwable]`.
+      * @tparam C
+      *   The higher-kinded type representing the JWT Claim, bounded by [[Claim]].
       * @return
-      *   An instance of [[ToLong[F, LocalDateTime]]]
+      *   An instance of `Expirable[F, LocalDateTime, C]`.
       */
-    given toLong[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]](using
-        zoneId: ZoneId
-    ): ToLong[F, LocalDateTime] with
-      def toLong(
-          claim: Claim[LocalDateTime]
-      ): F[Claim[Long]] = Claim[Long](
-        iss = claim.iss,
-        sub = claim.sub,
-        aud = claim.aud,
-        exp = claim.exp.map(_.toEpochMilli),
-        nbf = claim.nbf.map(_.toEpochMilli),
-        iat = claim.iat.map(_.toEpochMilli),
-        jti = claim.jti
-      ).pure[F]
-
-    /** A convenience instance of [[FromLong]] that converts [[LocalDateTime]] to Long
-      * @param zoneId
-      *   The time zone of the user to properly convert the raw Long time type to a
-      *   [[LocalDateTime]]
-      * @tparam F
-      *   The effect type
-      * @return
-      *   An instance of [[FromLong[F, LocalDateTime]]]
-      */
-    given fromLong[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]](using
-        zoneId: ZoneId
-    ): FromLong[F, LocalDateTime] with
-      def fromLong(
-          claim: Claim[Long]
-      ): F[Claim[LocalDateTime]] = Claim[LocalDateTime](
-        iss = claim.iss,
-        sub = claim.sub,
-        aud = claim.aud,
-        exp = claim.exp.map(_.toLocalDateTime),
-        nbf = claim.nbf.map(_.toLocalDateTime),
-        iat = claim.iat.map(_.toLocalDateTime),
-        jti = claim.jti
-      ).pure[F]
-
-    /** An instance of [[Expirable]] check if a Claim[LocalDateTime] is expired or still valid
-      * @tparam F
-      *   The effect type
-      * @return
-      *   An instance of [[Expirable[F, LocalDateTime]]]
-      */
-    given expirable[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]: Expirable[F, LocalDateTime]
-      with
-      def isExpired(
-          claim: Claim[LocalDateTime]
-      ): F[Boolean] = claim.exp
-        .map {
-          case exp if exp isAfter LocalDateTime.now() => true.pure[F]
-          case _                                      => ExpiredTokenError.raiseError[F, Boolean]
-        }
-        .getOrElse(false.pure[F])
+    given expirable[F[*]: [F[*]] =>> ApplicativeError[F, Throwable], C[X] <: Claim[X]]
+        : Expirable[F, LocalDateTime, C] with
+      def isExpired(claim: C[LocalDateTime]): F[C[LocalDateTime]] = claim.exp match
+        case Some(exp) if exp isBefore LocalDateTime.now() =>
+          ExpiredTokenException.raiseError[F, C[LocalDateTime]]
+        case _ => claim.pure[F]

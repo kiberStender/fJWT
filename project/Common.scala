@@ -24,7 +24,6 @@ object Common {
 
   lazy val dependencies: Seq[ModuleID] = Seq(
     org.typelevel.`cats-core`,
-    org.typelevel.`cats-effect`,
     `commons-codec`.`commons-codec`,
     // Test
     org.scalatest.scalatest,
