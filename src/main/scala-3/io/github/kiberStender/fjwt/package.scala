@@ -5,62 +5,52 @@ import cats.syntax.all.{
   catsSyntaxApplicativeErrorId,
   catsSyntaxApplicativeId,
   catsSyntaxEq,
-  toFunctorOps
+  toFlatMapOps
 }
+import io.github.kiberStender.fjwt.crypto.base64.Base64Encoder
 import io.github.kiberStender.fjwt.crypto.hmac.Hmac
-import io.github.kiberStender.fjwt.exception.JWTError.{
-  InvalidSignatureError,
-  Not2TokenPartsError,
-  Not3TokenPartsError
+import io.github.kiberStender.fjwt.exception.JWTException.{
+  InvalidSignatureException,
+  Not2TokenPartsException,
+  Not3TokenPartsException
 }
-import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm
+import io.github.kiberStender.fjwt.models.Header
 
 import java.nio.charset.StandardCharsets
 import java.time.{Instant, LocalDateTime, ZoneId, ZonedDateTime}
-import scala.util.matching.Regex
 
+/** The root package object for the FJWT library, providing extension methods and implicit classes
+  * that streamline string manipulation, token parsing, signature computation and validation, and
+  * time conversion across effect types.
+  */
 package object fjwt:
-
-  /** Helper method to extract data from a given JSON formatted String using Regex
-    * @param pattern
-    *   The regex pattern
-    * @param json
-    *   The JSON formatted String to have data extracted from
-    * @tparam F
-    *   The effect type
-    * @return
-    *   An Option[String]
+  /** Extension methods for `String` providing JWT-specific parsing, validation, signature checking,
+    * and transformation operations lifted into effect types.
+    *
+    * @param str
+    *   The underlying string being enhanced (typically representing a token or body segment).
     */
-  private[fjwt] def extractField[F[*]: [F[*]] =>> MonadError[F, Throwable]](pattern: Regex)(
-      json: String
-  ): F[Option[String]] =
-    pattern findFirstMatchIn json match
-      case Some(m) =>
-        m.group(1)
-          .pure[F]
-          .map(value => if (value.isEmpty || value === "null") None else Some(value))
-      case None => (None: Option[String]).pure[F]
-
   extension (str: String) {
 
-    /** A helper method to convert a given String into a Byte Array with UTF-8 characters
-      * @return
+    /** Converts the string into a UTF-8 encoded byte array.
       */
     private[fjwt] def toBytesUTF8: Array[Byte] = str getBytes StandardCharsets.UTF_8
 
-    /** A helper method to find out if a given String is empty or null
-      * @param nullCase
-      *   The Exception to return in case it is null
-      * @param emptyCase
-      *   The Exception to return in case it is empty
+    /** Validates that the string is neither null nor empty, lifting custom error instances into the
+      * effect type `F` if a validation failure occurs.
+      *
       * @tparam F
-      *   The effect type
+      *   The effect type constructor, requiring `cats.ApplicativeError[F, Throwable]`.
       * @tparam N
-      *   The type of the Null Exception
+      *   The type of the exception raised if the string is null.
       * @tparam E
-      *   The type of the Empty Exception
+      *   The type of the exception raised if the string is empty.
+      * @param nullCase
+      *   A call-by-name exception instance for the null case.
+      * @param emptyCase
+      *   A call-by-name exception instance for the empty case.
       * @return
-      *   Either the String back or the given exception for the given case
+      *   The original string, suspended in `F` if checks pass.
       */
     private[fjwt] def isEmptyValue[F[*]: [F[*]] =>> ApplicativeError[
       F,
@@ -70,91 +60,108 @@ package object fjwt:
       else if str.isEmpty then emptyCase.raiseError[F, String]
       else str.pure[F]
 
-    /** A convenience method to merge two JSON formatted Strings into a single JSON formatted String
-      * @param strJson
-      *   The String to be merged
-      * @return
-      *   A new JSON formatted String
+    /** Merges two JSON object strings by stripping the closing brace of the first and the opening
+      * brace of the second, combining them into a single JSON object representation.
       */
     private[fjwt] def merge(strJson: String): String =
       s"${str.stripSuffix("}")},${strJson.stripPrefix("{")}"
 
-    /** A helper method to check if a given token has At Least two(2) parts eg: abcd.ab
+    /** Splits a raw token string into its header and payload segments, expecting at least two
+      * dot-separated parts (`header.payload`).
+      *
       * @tparam F
-      *   The effect type
+      *   The effect type constructor, requiring `cats.ApplicativeError[F, Throwable]`.
       * @return
-      *   Either a Tuple2 containing each part or [[Not2TokenPartsError]]
+      *   A tuple of `(header, payload)` strings suspended in `F`, or a
+      *   [[JWTException.Not2TokenPartsException]] if malformed.
       */
-    private[fjwt] def is2Parts[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]
+    private[fjwt] def toHeaderAndPayload[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]
         : F[(String, String)] =
       str split "\\." match
         case Array(header, payload, _*) => (header, payload).pure[F]
-        case _                          => Not2TokenPartsError.raiseError[F, (String, String)]
+        case _                          => Not2TokenPartsException.raiseError[F, (String, String)]
 
-    /** A helper method to check if a given token has At Least three(3) parts eg: abcd.ab.cd
+    /** Splits a raw token string into its header, payload, and signature segments, expecting at
+      * least three dot-separated parts (`header.payload.signature`).
+      *
       * @tparam F
-      *   The effect type
+      *   The effect type constructor, requiring `cats.ApplicativeError[F, Throwable]`.
       * @return
-      *   Either a Tuple3 containing each part or [[Not3TokenPartsError]]
+      *   A tuple of `(header, payload, signature)` strings suspended in `F`, or a
+      *   [[JWTException.Not3TokenPartsException]] if malformed.
       */
-    private[fjwt] def is3Parts[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]
+    private[fjwt] def toHeaderPayloadAndSignature[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]]
         : F[(String, String, String)] =
       str split "\\." match
         case Array(header, payload, signature, _*) => (header, payload, signature).pure[F]
-        case _ => Not3TokenPartsError.raiseError[F, (String, String, String)]
+        case _ => Not3TokenPartsException.raiseError[F, (String, String, String)]
 
-    /** A helper method to check if a given signature(the third part of the JWT) is valid
-      * @param originalSignature
-      *   The original signature that comes with the token
+    /** Computes the HMAC signature of the underlying string using the provided header and private
+      * key, encodes the resulting hash into URL-safe Base64, and verifies it against the original
+      * signature.
+      *
       * @tparam F
-      *   The effect type
+      *   The effect type constructor, requiring `cats.MonadError[F, Throwable]`, `Hmac`, and
+      *   `Base64Encoder`.
+      * @param header
+      *   The JWT header containing algorithm configuration details.
+      * @param key
+      *   The secret private key used for HMAC calculation.
+      * @param origSignature
+      *   The original signature string extracted from the token to compare against.
       * @return
-      *   Either True or [[InvalidSignatureError]]
+      *   `true` suspended in `F` if the calculated signature matches the original, or a suspended
+      *   [[JWTException.InvalidSignatureException]] if they differ.
       */
-    private[fjwt] def isValidSignature[F[*]: [F[*]] =>> ApplicativeError[F, Throwable]](
-        originalSignature: String
-    ): F[Boolean] =
-      if str === originalSignature then true.pure[F]
-      else InvalidSignatureError.raiseError[F, Boolean]
+    private[fjwt] def validateSignature[
+        F[*]: [F[*]] =>> MonadError[F, Throwable]: Hmac: Base64Encoder
+    ](header: Header)(key: String)(origSignature: String): F[Boolean] =
+      implicitly[Hmac[F]]
+        .hash(header)(key)(str)
+        .flatMap(implicitly[Base64Encoder[F]].encodeURLSafe)
+        .flatMap { calc_sig =>
+          if (calc_sig === origSignature) true.pure[F]
+          else InvalidSignatureException.raiseError[F, Boolean]
+        }
+
   }
 
+  /** Extension methods for `Long` epoch timestamp values to facilitate conversion into local
+    * date-time representations.
+    *
+    * @param n
+    *   The underlying epoch timestamp in milliseconds.
+    */
   extension (n: Long) {
 
-    /** A helper method to convert a Long object to a [[LocalDateTime]]
+    /** Converts an epoch millisecond timestamp into a `java.time.LocalDateTime` using the implicit
+      * time zone in scope.
+      *
       * @param zoneId
-      *   The time zone of the user to properly convert the [[LocalDateTime]] to a Long object
+      *   The implicit time zone required for conversion.
       * @return
-      *   A [[LocalDateTime]] instance
+      *   The equivalent `LocalDateTime`.
       */
     def toLocalDateTime(using zoneId: ZoneId): LocalDateTime =
       Instant.ofEpochMilli(n).atZone(zoneId).toLocalDateTime
   }
 
+  /** Extension methods for `java.time.LocalDateTime` to facilitate conversion back into epoch
+    * timestamp representations.
+    *
+    * @param ldt
+    *   The underlying `LocalDateTime` being enhanced.
+    */
   extension (ldt: LocalDateTime) {
 
-    /** A helper method to convert a [[LocalDateTime]] object to a Long
+    /** Converts a `java.time.LocalDateTime` into an epoch millisecond timestamp using the implicit
+      * time zone in scope.
+      *
       * @param zoneId
-      *   The time zone of the user to properly convert the [[LocalDateTime]] to a Long object
+      *   The implicit time zone required for conversion.
       * @return
-      *   A Long instance
+      *   The equivalent epoch time in milliseconds (`Long`).
       */
     def toEpochMilli(using zoneId: ZoneId): Long =
       ZonedDateTime.of(ldt, zoneId).toInstant.toEpochMilli
-  }
-
-  extension (alg: HmacAlgorithm) {
-
-    /** A syntax sugar function to make it easier to read a hmac hashing the token to produce the
-      * signature
-      * @param privateKey
-      *   The key used to hash the string
-      * @param str
-      *   The string to be hashed
-      * @tparam F
-      *   The effect type
-      * @return
-      *   The hashed String
-      */
-    def hash[F[*]: Hmac](privateKey: String)(str: String): F[Array[Byte]] =
-      implicitly[Hmac[F]].hash(alg)(privateKey)(str)
   }

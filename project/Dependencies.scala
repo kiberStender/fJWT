@@ -1,4 +1,4 @@
-import sbt._
+import sbt.*
 
 object Dependencies {
 
@@ -9,7 +9,7 @@ object Dependencies {
   }
 
   case object `commons-codec` {
-    val `commons-codec` = "commons-codec" % "commons-codec" % "1.22.0"
+    val `commons-codec` = "commons-codec" % "commons-codec" % "1.22.1"
   }
 
   case object io {
@@ -29,7 +29,6 @@ object Dependencies {
     }
     case object typelevel {
       val `cats-core`   = "org.typelevel" %% "cats-core" % "2.13.0"
-      val `cats-effect` = "org.typelevel" %% "cats-effect" % "3.7.0"
 
       val `kind-projector` = "org.typelevel" % "kind-projector" % "0.13.4" cross CrossVersion.full
     }

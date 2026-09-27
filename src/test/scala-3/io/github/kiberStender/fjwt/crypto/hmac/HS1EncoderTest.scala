@@ -3,16 +3,17 @@ package fjwt
 package crypto
 package hmac
 
-import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm
-import io.github.kiberStender.fjwt.models.crypto.HmacAlgorithm.HmacSHA1
 import io.github.kiberStender.fjwt.implicits.header.Implicits.hmacEncoderApacheCommons
 import org.scalatest.*
 import flatspec.*
+import io.github.kiberStender.fjwt.models.Header
 import matchers.*
 
 class HS1EncoderTest extends AnyFlatSpecLike with should.Matchers with GivenWhenThen:
   private type F = [T] =>> Either[Throwable, T]
-  private lazy val encoder: HmacAlgorithm = HmacSHA1
+  private val header: Header = new Header {
+    val alg: String = "HS1"
+  }
 
   "HS1Encoder" should "encrypt a JWT Token" in {
     // GIVEN
@@ -23,7 +24,7 @@ class HS1EncoderTest extends AnyFlatSpecLike with should.Matchers with GivenWhen
     )
 
     // WHEN
-    val actual: F[Array[Byte]] = encoder.hash[F](key)(input)
+    val actual: F[Array[Byte]] = implicitly[Hmac[F]].hash(header)(key)(input)
 
     // THEN
     actual.map(value => value should be(expected))

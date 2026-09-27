@@ -2,29 +2,50 @@ package io.github.kiberStender
 package fjwt
 package models
 
-/** A case class to map the claim part of the JWT
-  * @param iss
-  *   The issuer of the token[Optional]
-  * @param sub
-  *   The subject of the token[Optional]
-  * @param aud
-  *   The intended audience of the token[Optional]
-  * @param exp
-  *   The expiration time of the token[Optional]
-  * @param nbf
-  *   The not before datetime(The token cannot be used before the given date) of
-  *   the token[Optional]
-  * @param iat
-  *   The Issued at(The time the token was issued) of the token[Optional]
-  * @param jti
-  *   The token ID[Optional]
+/** Represents the standard registered claims of a JSON Web Token (JWT) as
+  * defined by RFC 7519.
+  *
+  * Claims are statements about an entity (typically, the user) and additional
+  * metadata. All standard claims are optional.
+  *
+  * @tparam T
+  *   The data type used to represent time-based claims (e.g., `Long` for Unix
+  *   timestamps, or a time object like `java.time.Instant`). It is covariant
+  *   (`+T`) to allow for flexible subtyping.
   */
-final case class Claim[+T](
-    iss: Option[String] = None,
-    sub: Option[String] = None,
-    aud: Option[String] = None,
-    exp: Option[T] = None,
-    nbf: Option[T] = None,
-    iat: Option[T] = None,
-    jti: Option[String] = None
-)
+trait Claim[+T] {
+
+  /** Issuer (`iss`): Identifies the principal (server or application) that
+    * issued the JWT.
+    */
+  def iss: Option[String]
+
+  /** Subject (`sub`): Identifies the principal that is the subject of the JWT
+    * (often a user ID).
+    */
+  def sub: Option[String]
+
+  /** Audience (`aud`): Identifies the intended recipients or target
+    * applications of the JWT.
+    */
+  def aud: Option[String]
+
+  /** Expiration Time (`exp`): The exact time on or after which the JWT must not
+    * be accepted for processing.
+    */
+  def exp: Option[T]
+
+  /** Not Before (`nbf`): The exact time before which the JWT must not be
+    * accepted for processing.
+    */
+  def nbf: Option[T]
+
+  /** Issued At (`iat`): The time at which the JWT was created and issued.
+    */
+  def iat: Option[T]
+
+  /** JWT ID (`jti`): A unique identifier for the token, typically used to
+    * prevent replay attacks.
+    */
+  def jti: Option[String]
+}

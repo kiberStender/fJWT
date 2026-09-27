@@ -3,14 +3,14 @@ import Dependencies.{io, *}
 
 ThisBuild / organization := "io.github.kiberStender"
 ThisBuild / description := "Simple Scala 2/3 JWT encoder/decoder written using Tagless final encoding"
-ThisBuild / homepage := Some(url("https://github.com/kiberStender/fJWT"))
-ThisBuild / scmInfo := Some(ScmInfo(url("https://github.com/kiberStender/fJWT"), "git@github.com:kiberStender/fJWT.git"))
-ThisBuild / developers := List(Developer(id = "1076952", name = "Kleber Eduardo Scalise Stender", email = "kleberstenderdev@gmail.com", url = url("https://github.com/kiberStender")))
+ThisBuild / homepage := Some(url("https://github.com/kiberStender/fJWT-core"))
+ThisBuild / scmInfo := Some(ScmInfo(url("https://github.com/kiberStender/fJWT-core"), "git@github.com:kiberStender/fJWT-core.git"))
+ThisBuild / developers := List(Developer(id = "1076952", name = "Kleber Eduardo Scalise Stender", email = "kleberstender@gmail.com", url = url("https://github.com/kiberStender")))
 ThisBuild / licenses += ("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 
 ThisBuild / publishMavenStyle := true
 ThisBuild / sonatypeProfileName := "io.github.kiberStender"
-ThisBuild / sonatypeProjectHosting := Some(GitHubHosting(user = "kiberStender", repository = "fjwt", email = "kleberstenderdev@gmail.com"))
+ThisBuild / sonatypeProjectHosting := Some(GitHubHosting(user = "kiberStender", repository = "fjwt", email = "kleberstender@gmail.com"))
 
 ThisBuild / publishTo := sonatypePublishToBundle.value
 
@@ -42,7 +42,7 @@ ThisBuild / releaseProcess := Seq[ReleaseStep](
 )
 
 lazy val root = (project in file("."))
-  .settings(name := "fJWT")
+  .settings(name := "fJWT-core")
   .settings(Common.settings: _*)
   .settings(libraryDependencies ++= Common.dependencies)
   .settings(
